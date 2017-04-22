@@ -6,6 +6,7 @@ public class TileState : MonoBehaviour {
 
 	public Sprite defaultSprite;
 	public Sprite selectedSprite;
+    public Sprite walkableSprite;
 	private SpriteRenderer spriteRenderer;
 	private bool isSelected = false;
 
@@ -44,6 +45,11 @@ public class TileState : MonoBehaviour {
     {
         spriteRenderer.sprite = defaultSprite;
         isSelected = false;
+    }
+
+    public void SetWalkable()
+    {
+        spriteRenderer.sprite = walkableSprite;
     }
 
 }

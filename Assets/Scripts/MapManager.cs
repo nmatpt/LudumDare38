@@ -20,6 +20,7 @@ public class MapManager : MonoBehaviour {
     private GameObject selectedTile;
     private GameObject selectedPerson;
     private Vector3 selectedTileCoordinates;
+    private HashSet<GameObject> walkableTiles;
     
 
 	// Use this for initialization
@@ -30,6 +31,8 @@ public class MapManager : MonoBehaviour {
 
         selectedTile = null;
         selectedPerson = null;
+
+        walkableTiles = new HashSet<GameObject>();
     }
 	
 	// Update is called once per frame
@@ -52,6 +55,7 @@ public class MapManager : MonoBehaviour {
 
                 selectedTile.GetComponent<TileState>().Unselect();
                 selectedTile = null;
+                ResetWalkableTiles();
                 selectedPerson.GetComponent<PersonAnimator>().Unselect();
                 selectedPerson = null;
             }
@@ -65,6 +69,7 @@ public class MapManager : MonoBehaviour {
                     if (selectedTile != null)
                     {
                         selectedTile.GetComponent<TileState>().Unselect();
+                        ResetWalkableTiles();
                     }
                     tile.GetComponent<TileState>().Select();
                     selectedTile = tile;
@@ -80,6 +85,7 @@ public class MapManager : MonoBehaviour {
                     }
                     person.GetComponent<PersonAnimator>().Select();
                     selectedPerson = person;
+                    ActivateWalkableTiles(clickedTileCoordinates);
                 }
                 else if (tile != null && selectedPerson != null && selectedPerson != person) // clicked a tile without people
                 {
@@ -145,6 +151,28 @@ public class MapManager : MonoBehaviour {
         }
 
         return peopleMatrix;
+    }
+
+    private void ActivateWalkableTiles(Vector3 centerTileCubeCoordinates)
+    {
+        foreach (Vector3 vec in CubeCoordinatesNeightbours(centerTileCubeCoordinates))
+        {
+            GameObject go = tileMatrix.GetValue(vec);
+            if (go != null)
+            {
+                walkableTiles.Add(go);
+                go.GetComponent<TileState>().SetWalkable();
+            }
+        }
+    }
+
+    private void ResetWalkableTiles()
+    {
+        foreach (GameObject go in walkableTiles)
+        {
+            go.GetComponent<TileState>().Unselect();
+        }
+        walkableTiles.Clear();
     }
 
     private List<Vector3> GetAllCubeCoordinates()
@@ -240,6 +268,7 @@ public class MapManager : MonoBehaviour {
         return AxialToCubeCoordinates(PointyTopSceneToAxialCoordinates(sceneCoordinates));
     }
 
+    // Other coordinate stuff
     private Vector3 RoundCubeCoordinates(Vector3 coordinates)
     {
         float x = Mathf.Round(coordinates.x);
@@ -276,6 +305,18 @@ public class MapManager : MonoBehaviour {
         return Mathf.Max(Mathf.Abs(pos1.x - pos2.x), Mathf.Abs(pos1.y - pos2.y), Mathf.Abs(pos1.z - pos2.z));
     }
 
+    private HashSet<Vector3> CubeCoordinatesNeightbours(Vector3 vec)
+    {
+        HashSet<Vector3> vectors = new HashSet<Vector3>();
+        vectors.Add(vec + new Vector3(-1, 1, 0));
+        vectors.Add(vec + new Vector3(-1, 0, 1));
+        vectors.Add(vec + new Vector3(0, 1, -1));
+        vectors.Add(vec + new Vector3(0, -1, 1));
+        vectors.Add(vec + new Vector3(1, -1, 0));
+        vectors.Add(vec + new Vector3(1, 0, -1));
+
+        return vectors;
+    }
 
     private class GameObjectCubeMatrix : IEnumerable<GameObject>
     {
