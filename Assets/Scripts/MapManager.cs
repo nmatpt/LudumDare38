@@ -15,8 +15,8 @@ public class MapManager : MonoBehaviour {
     public GameObject personTemplate;
     public int numberOfPeople;
 
-    private GameObjectMatrix tileMatrix;
-    private GameObjectMatrix peopleMatrix;
+    private GameObjectCubeMatrix tileMatrix;
+    private GameObjectCubeMatrix peopleMatrix;
     private GameObject selectedTile;
     private GameObject selectedPerson;
     
@@ -37,11 +37,10 @@ public class MapManager : MonoBehaviour {
         if (Input.GetMouseButtonDown(0))
         {
             Vector2 mousePosition = gameCamera.ScreenToWorldPoint(Input.mousePosition);
-            Vector2 selectedTileCoordinates = PointyTopSceneToAxialCoordinates(mousePosition);
-            //Vector2 selectedTileCoordinates = FlatTopSceneToAxialCoordinates(mousePosition);
+            Vector3 clickedTileCoordinates = PointyTopSceneToCubeCoordinates(mousePosition);
 
             // handle tiles
-            GameObject tile = tileMatrix.GetValue( (int)selectedTileCoordinates.x, (int)selectedTileCoordinates.y);
+            GameObject tile = tileMatrix.GetValue( (int)clickedTileCoordinates.x, (int)clickedTileCoordinates.y, (int)clickedTileCoordinates.z);
             if (tile != null && tile != selectedTile)
             {
                 if (selectedTile != null)
@@ -53,7 +52,7 @@ public class MapManager : MonoBehaviour {
             }
 
             // handle people
-            GameObject person = peopleMatrix.GetValue((int)selectedTileCoordinates.x, (int)selectedTileCoordinates.y);
+            GameObject person = peopleMatrix.GetValue((int)clickedTileCoordinates.x, (int)clickedTileCoordinates.y, (int)clickedTileCoordinates.z);
             if (person != null && person != selectedPerson)
             {
                 if (selectedPerson != null)
@@ -63,9 +62,10 @@ public class MapManager : MonoBehaviour {
                 person.GetComponent<PersonAnimator>().Select();
                 selectedPerson = person;
             }
-            else if (tile != null && selectedPerson != null) // clicked a tile without people
+            else if (tile != null && selectedPerson != null && selectedPerson != person) // clicked a tile without people
             {
                 selectedPerson.GetComponent<PersonAnimator>().Unselect();
+                selectedPerson = null;                
             }
             
         }
@@ -88,25 +88,23 @@ public class MapManager : MonoBehaviour {
         }
 	}
 
-    private GameObjectMatrix GenerateMap()
+    private GameObjectCubeMatrix GenerateMap()
     {
-        GameObjectMatrix tileMatrix = new GameObjectMatrix();
+        GameObjectCubeMatrix tileMatrix = new GameObjectCubeMatrix();
 
         foreach (Vector3 cubeVec in GetAllCubeCoordinates())
         {
-            Vector2 axialVec = CubeToAxialCoordinates(cubeVec);
-            Vector2 screenVec = AxialToPointyTopSceneCoordinates(axialVec);
-            //Vector2 screenVec = AxialToFlatTopSceneCoordinates(axialVec);
+            Vector2 screenVec = CubeToPointyTopSceneCoordinates(cubeVec);
             GameObject hex = Instantiate(hexTemplate, new Vector3(screenVec.x, screenVec.y, 0), Quaternion.identity);
-            tileMatrix.SetValue((int)axialVec.x, (int)axialVec.y, hex);
+            tileMatrix.SetValue((int)cubeVec.x, (int)cubeVec.y, (int)cubeVec.z, hex);
         }
 
         return tileMatrix;
     }
 
-    private GameObjectMatrix PopulateMap()
+    private GameObjectCubeMatrix PopulateMap()
     {
-        GameObjectMatrix peopleMatrix = new GameObjectMatrix();
+        GameObjectCubeMatrix peopleMatrix = new GameObjectCubeMatrix();
 
         List<Vector3> coordinates = GetAllCubeCoordinates();
         if (numberOfPeople > coordinates.Count)
@@ -119,11 +117,9 @@ public class MapManager : MonoBehaviour {
             int index = UnityEngine.Random.Range(0, coordinates.Count);
             Vector3 cube = coordinates[index];
             coordinates.RemoveAt(index);
-            Vector2 axial = CubeToAxialCoordinates(cube);
-            Vector2 screen = AxialToPointyTopSceneCoordinates(axial);
-            //Vector2 screen = AxialToFlatTopSceneCoordinates(axial);
+            Vector2 screen = CubeToPointyTopSceneCoordinates(cube);
             GameObject person = Instantiate(personTemplate, new Vector3(screen.x, screen.y, 0), Quaternion.identity);
-            peopleMatrix.SetValue((int)axial.x, (int)axial.y, person);
+            peopleMatrix.SetValue((int)cube.x, (int)cube.y, (int)cube.z, person);
         }
 
         return peopleMatrix;
@@ -149,6 +145,7 @@ public class MapManager : MonoBehaviour {
         return coordinates;
     }
 
+    // Cube Coordinates to X
     private Vector2 CubeToAxialCoordinates(Vector3 cubeCoordinates)
     {
         float x = cubeCoordinates.x;
@@ -156,6 +153,17 @@ public class MapManager : MonoBehaviour {
         return new Vector2(x, y);
     }
 
+    private Vector2 CubeToFlatTopSceneCoordinates(Vector3 cubeCoordinates)
+    {
+        return AxialToFlatTopSceneCoordinates(CubeToAxialCoordinates(cubeCoordinates));
+    }
+
+    private Vector2 CubeToPointyTopSceneCoordinates(Vector3 cubeCoordinates)
+    {
+        return AxialToPointyTopSceneCoordinates(CubeToAxialCoordinates(cubeCoordinates));
+    }
+
+    // Axial Coordinates to X
     private Vector3 AxialToCubeCoordinates(Vector2 axialCoordinates)
     {
         float x = axialCoordinates.x;
@@ -179,6 +187,7 @@ public class MapManager : MonoBehaviour {
         return new Vector2(x, y);
     }
 
+    // Scene Coordinates to X
     private Vector2 FlatTopSceneToAxialCoordinates(Vector2 sceneCoordinates)
     {
         float x = sceneCoordinates.x * 2 / 3 / hexRadius;
@@ -191,6 +200,16 @@ public class MapManager : MonoBehaviour {
         float x = (sceneCoordinates.x * Mathf.Sqrt(3) / 3 - sceneCoordinates.y / 3) / hexRadius;
         float y = sceneCoordinates.y * 2 / 3 / hexRadius;
         return roundAxialCoordinates(new Vector2(x, y));
+    }
+
+    private Vector3 FlatTopSceneToCubeCoordinates(Vector3 sceneCoordinates)
+    {
+        return AxialToCubeCoordinates(FlatTopSceneToAxialCoordinates(sceneCoordinates));
+    }
+
+    private Vector3 PointyTopSceneToCubeCoordinates(Vector3 sceneCoordinates)
+    {
+        return AxialToCubeCoordinates(PointyTopSceneToAxialCoordinates(sceneCoordinates));
     }
 
     private Vector3 roundCubeCoordinates(Vector3 coordinates)
@@ -225,36 +244,47 @@ public class MapManager : MonoBehaviour {
     }
 
 
-    private class GameObjectMatrix : IEnumerable<GameObject>
+    private class GameObjectCubeMatrix : IEnumerable<GameObject>
     {
-        private Dictionary<int, Dictionary<int, GameObject>> matrix;
+        private Dictionary<int, Dictionary<int, Dictionary<int, GameObject>>> matrix;
 
-        public GameObjectMatrix()
+        public GameObjectCubeMatrix()
         {
-            matrix = new Dictionary<int, Dictionary<int, GameObject>>();
+            matrix = new Dictionary<int, Dictionary<int, Dictionary<int, GameObject>>>();
         }
 
-        public void SetValue(int x, int y, GameObject value)
+        public void SetValue(int x, int y, int z, GameObject value)
         {
-            Dictionary<int, GameObject> dict = null;
+            Dictionary<int, Dictionary<int, GameObject>> dict1 = null;
             try
             {
-                dict = matrix[x];
+                dict1 = matrix[x];
             }
-            catch (System.Exception)
+            catch (KeyNotFoundException)
             {
-                dict = new Dictionary<int, GameObject>();
-                matrix[x] = dict;
+                dict1 = new Dictionary<int, Dictionary<int, GameObject>>();
+                matrix[x] = dict1;
             }
 
-            dict[y] = value;
+            Dictionary<int, GameObject> dict2 = null;
+            try
+            {
+                dict2 = dict1[y];
+            }
+            catch (KeyNotFoundException)
+            {
+                dict2 = new Dictionary<int, GameObject>();
+                dict1[y] = dict2;
+            }
+
+            dict2[z] = value;
         }
 
-        public GameObject GetValue(int x, int y)
+        public GameObject GetValue(int x, int y, int z)
         {
             try
             {
-                return matrix[x][y];
+                return matrix[x][y][z];
             }
             catch (System.Exception)
             {
@@ -268,7 +298,10 @@ public class MapManager : MonoBehaviour {
             {
                 foreach (int y in matrix[x].Keys)
                 {
-                    yield return matrix[x][y];
+                    foreach (int z in matrix[x][y].Keys)
+                    {
+                        yield return matrix[x][y][z];
+                    }
                 }
             }
         }
