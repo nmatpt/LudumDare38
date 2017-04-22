@@ -21,16 +21,6 @@ public class TileState : MonoBehaviour {
 		
 	}
 
-	//void OnMouseDown(){
-	//	if (!isSelected) {
-	//		spriteRenderer.sprite = selectedSprite;
-	//		isSelected = true;
-	//	} else {
-	//		spriteRenderer.sprite = defaultSprite;
-	//		isSelected = false;
-	//	}
-	//}
-
 	// Update is called once per frame
 	void Update () {
 	}
