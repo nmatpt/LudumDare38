@@ -31,6 +31,9 @@ public class MapManager : MonoBehaviour {
 
 	public UnityEngine.UI.Text winText;
 
+	public float destroyStartDelay = 1.0f;
+	public float destroyDelay = 1.0f;
+
 	// Use this for initialization
 	void Start () {
 
@@ -206,7 +209,8 @@ public class MapManager : MonoBehaviour {
 
 	private List<Vector3> ValidNeighbourTiles(Vector3 coordinates)
 	{
-		return CubeCoordinatesNeightbours (coordinates).Except (destroyedTiles).ToList();
+		
+		return CubeCoordinatesNeightbours (coordinates).Except (destroyedTiles).Where(c => tileMatrix.GetValue(c) != null).ToList();
 	}
 
     private void ResetWalkableTiles()
@@ -239,25 +243,36 @@ public class MapManager : MonoBehaviour {
     }
 
 	private void DestructionDaemon() {
-		InvokeRepeating	("DestroyTile", 3.0f, 3.0f);
+		InvokeRepeating	("DestroyTile", destroyStartDelay, destroyDelay);
 	}
 
 	private void DestroyTile(){
 		List<Vector3> coordinates = GetAllCubeCoordinates ()
 			.Except(destroyedTiles).ToList()
-			.Except(new List<Vector3>{rocketCoordinates}).ToList();
+			.ToList();
 		
-		if (coordinates.Count <= 0) {
+		if (coordinates.Count <= 1) {
 			print ("YOU LOST!!!!!!!");
 		}else{
-			int maxX = coordinates.Max (c => (int) c.x);
-			int maxY = coordinates.Max (c => (int) c.y);
-			int maxZ = coordinates.Max (c => (int) c.z);
+			int maxX = coordinates.Max (c =>  (int) Math.Abs(c.x));
+			int maxY = coordinates.Max (c => (int) Math.Abs(c.y));
+			int maxZ = coordinates.Max (c => (int) Math.Abs(c.z));
 
-			List<Vector3> borderTiles = coordinates.FindAll (c => c.x == maxX || c.y == maxY || c.z == maxZ);
+			//Look for border tiles and tiles that have neighbours destroyed
+			List<Vector3> borderTiles = coordinates.FindAll (c => Math.Abs(c.x) == maxX || Math.Abs(c.y) == maxY || Math.Abs(c.z) == maxZ);
+			List<Vector3> destroyedNeighbours = new List<Vector3> ();
+			destroyedTiles.ForEach (n => destroyedNeighbours.AddRange (ValidNeighbourTiles (n)));
+			destroyedNeighbours = destroyedNeighbours.ToList();
 
-			int index = UnityEngine.Random.Range(0, borderTiles.Count);
-			Vector3 coordinatesToDestroy = borderTiles [index];
+			//Bias towards border tiles and many destroyed neighbours
+			List <Vector3> selectableTiles = borderTiles
+				.Concat(borderTiles)
+				.Concat(borderTiles)
+				.Concat (destroyedNeighbours)
+				.Except(new List<Vector3>{rocketCoordinates}).ToList();
+			
+			int index = UnityEngine.Random.Range(0, selectableTiles.Count);
+			Vector3 coordinatesToDestroy = selectableTiles [index];
 
 			GameObject tile = tileMatrix.GetValue (coordinatesToDestroy);
 			GameObject person = peopleMatrix.GetValue (coordinatesToDestroy);
