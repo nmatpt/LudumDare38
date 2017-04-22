@@ -246,14 +246,16 @@ public class MapManager : MonoBehaviour {
 		List<Vector3> coordinates = GetAllCubeCoordinates ()
 			.Except(destroyedTiles).ToList()
 			.Except(new List<Vector3>{rocketCoordinates}).ToList();
-		int maxX = coordinates.Max (c => (int) c.x);
-		int maxY = coordinates.Max (c => (int) c.y);
-		int maxZ = coordinates.Max (c => (int) c.z);
-
-		List<Vector3> borderTiles = coordinates.FindAll (c => c.x == maxX || c.y == maxY || c.z == maxZ);
-		if (borderTiles.Count <= 0) {
+		
+		if (coordinates.Count <= 0) {
 			print ("YOU LOST!!!!!!!");
 		}else{
+			int maxX = coordinates.Max (c => (int) c.x);
+			int maxY = coordinates.Max (c => (int) c.y);
+			int maxZ = coordinates.Max (c => (int) c.z);
+
+			List<Vector3> borderTiles = coordinates.FindAll (c => c.x == maxX || c.y == maxY || c.z == maxZ);
+
 			int index = UnityEngine.Random.Range(0, borderTiles.Count);
 			Vector3 coordinatesToDestroy = borderTiles [index];
 
