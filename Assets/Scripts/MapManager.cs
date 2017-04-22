@@ -15,6 +15,10 @@ public class MapManager : MonoBehaviour {
     public GameObject personTemplate;
     public int numberOfPeople;
 
+	public GameObject rocketTemplate;
+	private Vector3 rocketCoordinates;
+	private int nrPersonsIn = 0;
+
     private GameObjectCubeMatrix tileMatrix;
     private GameObjectCubeMatrix peopleMatrix;
     private GameObject selectedTile;
@@ -22,11 +26,14 @@ public class MapManager : MonoBehaviour {
     private Vector3 selectedTileCoordinates;
     
 
+	public UnityEngine.UI.Text winText;
+
 	// Use this for initialization
 	void Start () {
 
         tileMatrix = GenerateMap();
         peopleMatrix = PopulateMap();
+		rocketCoordinates = PlaceRocket ();
 
         selectedTile = null;
         selectedPerson = null;
@@ -48,8 +55,16 @@ public class MapManager : MonoBehaviour {
                 // It's a move action
                 selectedPerson.transform.position = CubeToPointyTopSceneCoordinates(clickedTileCoordinates);
                 peopleMatrix.RemoveValue(selectedTileCoordinates);
-                peopleMatrix.AddValue(clickedTileCoordinates, selectedPerson);
 
+				// It's moving inside the rocket
+				if (rocketCoordinates == clickedTileCoordinates) {					
+					selectedPerson.SetActive (false);
+					nrPersonsIn += 1;
+					if (nrPersonsIn >= numberOfPeople) {
+						winText.text ="YOU WIN!!";
+					}
+				}
+				peopleMatrix.AddValue (clickedTileCoordinates, selectedPerson);
                 selectedTile.GetComponent<TileState>().Unselect();
                 selectedTile = null;
                 selectedPerson.GetComponent<PersonAnimator>().Unselect();
@@ -60,7 +75,7 @@ public class MapManager : MonoBehaviour {
                 // Its a random click
 
                 // handle tiles
-                if (tile != null && tile != selectedTile)
+				if (tile != null && tile != selectedTile && rocketCoordinates != clickedTileCoordinates)
                 {
                     if (selectedTile != null)
                     {
@@ -124,6 +139,14 @@ public class MapManager : MonoBehaviour {
         return tileMatrix;
     }
 
+	private Vector3 PlaceRocket()
+	{
+		Vector3 rocketCoordinates = new Vector3 (0, 0, 0);
+		GameObject rocket = Instantiate(rocketTemplate, rocketCoordinates, Quaternion.identity);
+
+			return rocketCoordinates;
+	}
+
     private GameObjectCubeMatrix PopulateMap()
     {
         GameObjectCubeMatrix peopleMatrix = new GameObjectCubeMatrix();
@@ -144,7 +167,7 @@ public class MapManager : MonoBehaviour {
             peopleMatrix.AddValue((int)cube.x, (int)cube.y, (int)cube.z, person);
         }
 
-        return peopleMatrix;
+		return peopleMatrix;
     }
 
     private List<Vector3> GetAllCubeCoordinates()
