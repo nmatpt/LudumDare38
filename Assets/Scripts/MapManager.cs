@@ -19,6 +19,7 @@ public class MapManager : MonoBehaviour {
     private GameObjectCubeMatrix peopleMatrix;
     private GameObject selectedTile;
     private GameObject selectedPerson;
+    private Vector3 selectedTileCoordinates;
     
 
 	// Use this for initialization
@@ -39,34 +40,55 @@ public class MapManager : MonoBehaviour {
             Vector2 mousePosition = gameCamera.ScreenToWorldPoint(Input.mousePosition);
             Vector3 clickedTileCoordinates = PointyTopSceneToCubeCoordinates(mousePosition);
 
-            // handle tiles
             GameObject tile = tileMatrix.GetValue( (int)clickedTileCoordinates.x, (int)clickedTileCoordinates.y, (int)clickedTileCoordinates.z);
-            if (tile != null && tile != selectedTile)
-            {
-                if (selectedTile != null)
-                {
-                    selectedTile.GetComponent<TileState>().Unselect();
-                }
-                tile.GetComponent<TileState>().Select();
-                selectedTile = tile;
-            }
-
-            // handle people
             GameObject person = peopleMatrix.GetValue((int)clickedTileCoordinates.x, (int)clickedTileCoordinates.y, (int)clickedTileCoordinates.z);
-            if (person != null && person != selectedPerson)
+
+            if (selectedTile != null && selectedPerson != null && CubeCoordinatesDistance(selectedTileCoordinates, clickedTileCoordinates) == 1)
             {
-                if (selectedPerson != null)
+                // It's a move action
+                selectedPerson.transform.position = CubeToPointyTopSceneCoordinates(clickedTileCoordinates);
+                peopleMatrix.RemoveValue(selectedTileCoordinates);
+                peopleMatrix.AddValue(clickedTileCoordinates, selectedPerson);
+
+                selectedTile.GetComponent<TileState>().Unselect();
+                selectedTile = null;
+                selectedPerson.GetComponent<PersonAnimator>().Unselect();
+                selectedPerson = null;
+            }
+            else
+            {
+                // Its a random click
+
+                // handle tiles
+                if (tile != null && tile != selectedTile)
+                {
+                    if (selectedTile != null)
+                    {
+                        selectedTile.GetComponent<TileState>().Unselect();
+                    }
+                    tile.GetComponent<TileState>().Select();
+                    selectedTile = tile;
+                    selectedTileCoordinates = clickedTileCoordinates;
+                }
+
+                // handle people
+                if (person != null && person != selectedPerson)
+                {
+                    if (selectedPerson != null)
+                    {
+                        selectedPerson.GetComponent<PersonAnimator>().Unselect();
+                    }
+                    person.GetComponent<PersonAnimator>().Select();
+                    selectedPerson = person;
+                }
+                else if (tile != null && selectedPerson != null && selectedPerson != person) // clicked a tile without people
                 {
                     selectedPerson.GetComponent<PersonAnimator>().Unselect();
+                    selectedPerson = null;
                 }
-                person.GetComponent<PersonAnimator>().Select();
-                selectedPerson = person;
             }
-            else if (tile != null && selectedPerson != null && selectedPerson != person) // clicked a tile without people
-            {
-                selectedPerson.GetComponent<PersonAnimator>().Unselect();
-                selectedPerson = null;                
-            }
+
+
             
         }
 
@@ -96,7 +118,7 @@ public class MapManager : MonoBehaviour {
         {
             Vector2 screenVec = CubeToPointyTopSceneCoordinates(cubeVec);
             GameObject hex = Instantiate(hexTemplate, new Vector3(screenVec.x, screenVec.y, 0), Quaternion.identity);
-            tileMatrix.SetValue((int)cubeVec.x, (int)cubeVec.y, (int)cubeVec.z, hex);
+            tileMatrix.AddValue((int)cubeVec.x, (int)cubeVec.y, (int)cubeVec.z, hex);
         }
 
         return tileMatrix;
@@ -119,7 +141,7 @@ public class MapManager : MonoBehaviour {
             coordinates.RemoveAt(index);
             Vector2 screen = CubeToPointyTopSceneCoordinates(cube);
             GameObject person = Instantiate(personTemplate, new Vector3(screen.x, screen.y, 0), Quaternion.identity);
-            peopleMatrix.SetValue((int)cube.x, (int)cube.y, (int)cube.z, person);
+            peopleMatrix.AddValue((int)cube.x, (int)cube.y, (int)cube.z, person);
         }
 
         return peopleMatrix;
@@ -144,6 +166,12 @@ public class MapManager : MonoBehaviour {
         }
         return coordinates;
     }
+
+    //////////////////////////////////////////////////
+    // TODO
+    // This whole thing is an inneficient mess. 
+    // Rewrite for direct Cube-To-Screen conversion
+    //////////////////////////////////////////////////
 
     // Cube Coordinates to X
     private Vector2 CubeToAxialCoordinates(Vector3 cubeCoordinates)
@@ -192,14 +220,14 @@ public class MapManager : MonoBehaviour {
     {
         float x = sceneCoordinates.x * 2 / 3 / hexRadius;
         float y = (-sceneCoordinates.x / 3 + Mathf.Sqrt(3) / 3 * sceneCoordinates.y) / hexRadius;
-        return roundAxialCoordinates(new Vector2(x, y));
+        return RoundAxialCoordinates(new Vector2(x, y));
     }
 
     private Vector2 PointyTopSceneToAxialCoordinates(Vector2 sceneCoordinates)
     {
         float x = (sceneCoordinates.x * Mathf.Sqrt(3) / 3 - sceneCoordinates.y / 3) / hexRadius;
         float y = sceneCoordinates.y * 2 / 3 / hexRadius;
-        return roundAxialCoordinates(new Vector2(x, y));
+        return RoundAxialCoordinates(new Vector2(x, y));
     }
 
     private Vector3 FlatTopSceneToCubeCoordinates(Vector3 sceneCoordinates)
@@ -212,7 +240,7 @@ public class MapManager : MonoBehaviour {
         return AxialToCubeCoordinates(PointyTopSceneToAxialCoordinates(sceneCoordinates));
     }
 
-    private Vector3 roundCubeCoordinates(Vector3 coordinates)
+    private Vector3 RoundCubeCoordinates(Vector3 coordinates)
     {
         float x = Mathf.Round(coordinates.x);
         float y = Mathf.Round(coordinates.y);
@@ -238,9 +266,14 @@ public class MapManager : MonoBehaviour {
         return new Vector3(x, y, z);
     }
 
-    private Vector2 roundAxialCoordinates(Vector2 coordinates)
+    private Vector2 RoundAxialCoordinates(Vector2 coordinates)
     {
-        return CubeToAxialCoordinates(roundCubeCoordinates(AxialToCubeCoordinates(coordinates)));
+        return CubeToAxialCoordinates(RoundCubeCoordinates(AxialToCubeCoordinates(coordinates)));
+    }
+
+    private float CubeCoordinatesDistance(Vector3 pos1, Vector3 pos2)
+    {
+        return Mathf.Max(Mathf.Abs(pos1.x - pos2.x), Mathf.Abs(pos1.y - pos2.y), Mathf.Abs(pos1.z - pos2.z));
     }
 
 
@@ -253,7 +286,7 @@ public class MapManager : MonoBehaviour {
             matrix = new Dictionary<int, Dictionary<int, Dictionary<int, GameObject>>>();
         }
 
-        public void SetValue(int x, int y, int z, GameObject value)
+        public void AddValue(int x, int y, int z, GameObject value)
         {
             Dictionary<int, Dictionary<int, GameObject>> dict1 = null;
             try
@@ -280,16 +313,43 @@ public class MapManager : MonoBehaviour {
             dict2[z] = value;
         }
 
+        public void AddValue(Vector3 vec, GameObject gameObject)
+        {
+            AddValue((int)vec.x, (int)vec.y, (int)vec.z, gameObject);
+        }
+
         public GameObject GetValue(int x, int y, int z)
         {
             try
             {
                 return matrix[x][y][z];
             }
-            catch (System.Exception)
+            catch (KeyNotFoundException)
             {
                 return null;
             }
+        }
+
+        public GameObject GetValue(Vector3 vec)
+        {
+            return GetValue((int)vec.x, (int)vec.y, (int)vec.z);
+        }
+
+        public void RemoveValue(int x, int y, int z)
+        {
+            try
+            {
+                matrix[x][y].Remove(z);
+            }
+            catch (KeyNotFoundException)
+            {
+                // pass silently
+            }
+        }
+
+        public void RemoveValue(Vector3 vec)
+        {
+            RemoveValue((int)vec.x, (int)vec.y, (int)vec.z);
         }
 
         public IEnumerator<GameObject> GetEnumerator()
