@@ -59,7 +59,8 @@ public class MapManager : MonoBehaviour {
                 selectedPerson.transform.position = CubeToPointyTopSceneCoordinates(clickedTileCoordinates);
                 peopleMatrix.RemoveValue(selectedTileCoordinates);
 
-				// It's moving inside the rocket
+                // It's moving inside the rocket
+                print(rocketCoordinates + " " + clickedTileCoordinates);
 				if (rocketCoordinates == clickedTileCoordinates) {					
 					selectedPerson.SetActive (false);
 					nrPersonsIn += 1;
@@ -147,10 +148,10 @@ public class MapManager : MonoBehaviour {
 
 	private Vector3 PlaceRocket()
 	{
-		Vector3 rocketCoordinates = new Vector3 (0, 0, 0);
-		GameObject rocket = Instantiate(rocketTemplate, rocketCoordinates, Quaternion.identity);
+        Vector3 rocketScenePosition = new Vector3(0, 0, -1);
+		GameObject rocket = Instantiate(rocketTemplate, rocketScenePosition, Quaternion.identity);
 
-			return rocketCoordinates;
+        return PointyTopSceneToCubeCoordinates(rocketScenePosition);
 	}
 
     private GameObjectCubeMatrix PopulateMap()
@@ -158,12 +159,22 @@ public class MapManager : MonoBehaviour {
         GameObjectCubeMatrix peopleMatrix = new GameObjectCubeMatrix();
 
         List<Vector3> coordinates = GetAllCubeCoordinates();
+        int i = 0;
+        for (; i < coordinates.Count; i++)
+        {
+            if (coordinates[i] == Vector3.zero)
+            {
+                break;
+            }
+        }
+        coordinates.RemoveAt(i);
+
         if (numberOfPeople > coordinates.Count)
         {
             throw new Exception("Number Of people must be less or equal to the number of tiles");
         }
 
-        for (int i=0; i < numberOfPeople; i++)
+        for (int j=0; j < numberOfPeople; j++)
         {
             int index = UnityEngine.Random.Range(0, coordinates.Count);
             Vector3 cube = coordinates[index];
