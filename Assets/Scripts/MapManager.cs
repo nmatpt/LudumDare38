@@ -37,8 +37,8 @@ public class MapManager : MonoBehaviour {
         if (Input.GetMouseButtonDown(0))
         {
             Vector2 mousePosition = gameCamera.ScreenToWorldPoint(Input.mousePosition);
-            // Vector2 selectedTileCoordinates = PointyTopSceneToAxialCoordinates(mousePosition);
-            Vector2 selectedTileCoordinates = FlatTopSceneToAxialCoordinates(mousePosition);
+            Vector2 selectedTileCoordinates = PointyTopSceneToAxialCoordinates(mousePosition);
+            //Vector2 selectedTileCoordinates = FlatTopSceneToAxialCoordinates(mousePosition);
 
             // handle tiles
             GameObject tile = tileMatrix.GetValue( (int)selectedTileCoordinates.x, (int)selectedTileCoordinates.y);
@@ -95,8 +95,8 @@ public class MapManager : MonoBehaviour {
         foreach (Vector3 cubeVec in GetAllCubeCoordinates())
         {
             Vector2 axialVec = CubeToAxialCoordinates(cubeVec);
-            //Vector2 screenVec = AxialToPointyTopSceneCoordinates(axialVec);
-            Vector2 screenVec = AxialToFlatTopSceneCoordinates(axialVec);
+            Vector2 screenVec = AxialToPointyTopSceneCoordinates(axialVec);
+            //Vector2 screenVec = AxialToFlatTopSceneCoordinates(axialVec);
             GameObject hex = Instantiate(hexTemplate, new Vector3(screenVec.x, screenVec.y, 0), Quaternion.identity);
             tileMatrix.SetValue((int)axialVec.x, (int)axialVec.y, hex);
         }
@@ -120,8 +120,8 @@ public class MapManager : MonoBehaviour {
             Vector3 cube = coordinates[index];
             coordinates.RemoveAt(index);
             Vector2 axial = CubeToAxialCoordinates(cube);
-            //Vector2 screen = AxialToPointyTopSceneCoordinates(axial);
-            Vector2 screen = AxialToFlatTopSceneCoordinates(axial);
+            Vector2 screen = AxialToPointyTopSceneCoordinates(axial);
+            //Vector2 screen = AxialToFlatTopSceneCoordinates(axial);
             GameObject person = Instantiate(personTemplate, new Vector3(screen.x, screen.y, 0), Quaternion.identity);
             peopleMatrix.SetValue((int)axial.x, (int)axial.y, person);
         }
