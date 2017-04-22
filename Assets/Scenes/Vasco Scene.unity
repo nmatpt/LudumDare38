@@ -232,6 +232,9 @@ MonoBehaviour:
   personTemplate: {fileID: 1306392188717020, guid: 5a7519d9beb934738a97ff58c3ad07b9,
     type: 2}
   numberOfPeople: 1
+  rocketTemplate: {fileID: 1635883812145392, guid: c89b8460efa844f55933a9483cd5124b,
+    type: 2}
+  winText: {fileID: 0}
 --- !u!4 &865658955
 Transform:
   m_ObjectHideFlags: 0
