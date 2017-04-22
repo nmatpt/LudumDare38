@@ -58,7 +58,7 @@ PolygonCollider2D:
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
-    oldSize: {x: 1.27, y: 1.27}
+    oldSize: {x: 1.1, y: 1.26}
     newSize: {x: 1.27, y: 1.27}
     adaptiveTilingThreshold: 0.5
     drawMode: 0
@@ -66,14 +66,17 @@ PolygonCollider2D:
   m_AutoTiling: 0
   m_Points:
     m_Paths:
-    - - {x: -0.31789857, y: 0.6118341}
-      - {x: -0.6084353, y: 0.048088875}
-      - {x: -0.6116252, y: -0.034732662}
-      - {x: -0.31797567, y: -0.61170876}
-      - {x: 0.28813723, y: -0.61162513}
-      - {x: 0.59467226, y: -0.0519}
-      - {x: 0.60184616, y: 0.025053848}
-      - {x: 0.3052154, y: 0.62173843}
+    - - {x: -0.52641195, y: 0.30647567}
+      - {x: -0.5293125, y: 0.13893345}
+      - {x: -0.53283906, y: -0.010876097}
+      - {x: -0.535433, y: -0.03180223}
+      - {x: -0.5260392, y: -0.30107868}
+      - {x: 0.021464258, y: -0.61162513}
+      - {x: 0.3131417, y: -0.43750897}
+      - {x: 0.5374868, y: -0.3056952}
+      - {x: 0.53783244, y: 0.30681995}
+      - {x: 0.5111761, y: 0.31854194}
+      - {x: 0.00407663, y: 0.61307263}
 --- !u!114 &114402579699811706
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -85,8 +88,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 38c1c9388811041c594a29f3f585c456, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  defaultSprite: {fileID: 21300000, guid: 87d9147d73be74fc5a1f0e0e03a80c9e, type: 3}
-  selectedSprite: {fileID: 21300000, guid: 6f0b1361f293148a2b945dfcf7cfbf37, type: 3}
+  defaultSprite: {fileID: 21300000, guid: 8ba34203e5155468684467c42251e619, type: 3}
+  selectedSprite: {fileID: 21300000, guid: 3038304dd88404057827be7961e58b71, type: 3}
 --- !u!212 &212767309260113008
 SpriteRenderer:
   m_ObjectHideFlags: 1
@@ -119,7 +122,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_Sprite: {fileID: 21300000, guid: 87d9147d73be74fc5a1f0e0e03a80c9e, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 8ba34203e5155468684467c42251e619, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0

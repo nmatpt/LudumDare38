@@ -224,8 +224,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 73ca2804d31138d48ac017de400e3fd2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  gameCamera: {fileID: 855973430}
   mapRadius: 3
-  hex: {fileID: 1890935116651982, guid: 20ef578ba704441708baa03d07c8ddb0, type: 2}
+  hexTemplate: {fileID: 1890935116651982, guid: 20ef578ba704441708baa03d07c8ddb0,
+    type: 2}
   hexRadius: 0.5
 --- !u!4 &865658955
 Transform:
