@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class PersonAnimator : MonoBehaviour {
 	//private SpriteRenderer spriteRenderer;
-	public bool isSelected = false;
+	private bool isSelected = false;
 	private Animator animator;					//Used to store a reference to the Player's animator component.
 
 	// Use this for initialization
@@ -14,18 +14,20 @@ public class PersonAnimator : MonoBehaviour {
 
 	}
 
-	void OnMouseDown(){
-		if (!isSelected) {
-			animator.SetBool("personHappy", true);
-			isSelected = true;
-		} else {
-			animator.SetBool("personHappy", false);
-			isSelected = false;
-		}
-	}
-
 	// Update is called once per frame
 	void Update () {
 		
 	}
+
+    public void Select()
+    {
+        animator.SetBool("personHappy", true);
+        isSelected = true;
+    }
+
+    public void Unselect()
+    {
+        animator.SetBool("personHappy", false);
+        isSelected = false;
+    }
 }

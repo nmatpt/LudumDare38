@@ -34,13 +34,13 @@ public class TileState : MonoBehaviour {
 	void Update () {
 	}
 
-    public void SelectTile()
+    public void Select()
     {
         spriteRenderer.sprite = selectedSprite;
         isSelected = true;
     }
 
-    public void UnselectTile()
+    public void Unselect()
     {
         spriteRenderer.sprite = defaultSprite;
         isSelected = false;

@@ -12,17 +12,24 @@ public class MapManager : MonoBehaviour {
     public GameObject hexTemplate;
     public float hexRadius;
 
-    private TileMatrix matrix;
+    public GameObject personTemplate;
+    public int numberOfPeople;
+
+    private GameObjectMatrix tileMatrix;
+    private GameObjectMatrix peopleMatrix;
     private GameObject selectedTile;
+    private GameObject selectedPerson;
     
 
 	// Use this for initialization
 	void Start () {
 
-        matrix = generateMap();
+        tileMatrix = GenerateMap();
+        peopleMatrix = PopulateMap();
 
         selectedTile = null;
-	}
+        selectedPerson = null;
+    }
 	
 	// Update is called once per frame
 	void Update () {
@@ -30,35 +37,101 @@ public class MapManager : MonoBehaviour {
         if (Input.GetMouseButtonDown(0))
         {
             Vector2 mousePosition = gameCamera.ScreenToWorldPoint(Input.mousePosition);
-            //print(Input.mousePosition + " " + mousePosition + " " + gameCamera.ScreenToWorldPoint(Input.mousePosition) + " " + FlatTopSceneToAxialCoordinates(mousePosition));
+            // Vector2 selectedTileCoordinates = PointyTopSceneToAxialCoordinates(mousePosition);
             Vector2 selectedTileCoordinates = FlatTopSceneToAxialCoordinates(mousePosition);
-            GameObject tile = matrix.GetValue( (int)selectedTileCoordinates.x, (int)selectedTileCoordinates.y);
+
+            // handle tiles
+            GameObject tile = tileMatrix.GetValue( (int)selectedTileCoordinates.x, (int)selectedTileCoordinates.y);
             if (tile != null && tile != selectedTile)
             {
                 if (selectedTile != null)
                 {
-                    selectedTile.GetComponent<TileState>().UnselectTile();
+                    selectedTile.GetComponent<TileState>().Unselect();
                 }
-                tile.GetComponent<TileState>().SelectTile();
+                tile.GetComponent<TileState>().Select();
                 selectedTile = tile;
             }
+
+            // handle people
+            GameObject person = peopleMatrix.GetValue((int)selectedTileCoordinates.x, (int)selectedTileCoordinates.y);
+            if (person != null && person != selectedPerson)
+            {
+                if (selectedPerson != null)
+                {
+                    selectedPerson.GetComponent<PersonAnimator>().Unselect();
+                }
+                person.GetComponent<PersonAnimator>().Select();
+                selectedPerson = person;
+            }
+            else if (tile != null && selectedPerson != null) // clicked a tile without people
+            {
+                selectedPerson.GetComponent<PersonAnimator>().Unselect();
+            }
+            
         }
 
         if (Input.GetKeyDown(KeyCode.Space))
         {
             selectedTile = null;
-            foreach (GameObject go in matrix)
+            foreach (GameObject go in tileMatrix)
             {
                 Destroy(go);
             }
-            matrix = generateMap();
+            tileMatrix = GenerateMap();
+
+            selectedPerson = null;
+            foreach (GameObject go in peopleMatrix)
+            {
+                Destroy(go);
+            }
+            peopleMatrix = PopulateMap();
         }
 	}
 
-    private TileMatrix generateMap()
+    private GameObjectMatrix GenerateMap()
     {
-        TileMatrix tileMatrix = new TileMatrix();
+        GameObjectMatrix tileMatrix = new GameObjectMatrix();
 
+        foreach (Vector3 cubeVec in GetAllCubeCoordinates())
+        {
+            Vector2 axialVec = CubeToAxialCoordinates(cubeVec);
+            //Vector2 screenVec = AxialToPointyTopSceneCoordinates(axialVec);
+            Vector2 screenVec = AxialToFlatTopSceneCoordinates(axialVec);
+            GameObject hex = Instantiate(hexTemplate, new Vector3(screenVec.x, screenVec.y, 0), Quaternion.identity);
+            tileMatrix.SetValue((int)axialVec.x, (int)axialVec.y, hex);
+        }
+
+        return tileMatrix;
+    }
+
+    private GameObjectMatrix PopulateMap()
+    {
+        GameObjectMatrix peopleMatrix = new GameObjectMatrix();
+
+        List<Vector3> coordinates = GetAllCubeCoordinates();
+        if (numberOfPeople > coordinates.Count)
+        {
+            throw new Exception("Number Of people must be less or equal to the number of tiles");
+        }
+
+        for (int i=0; i < numberOfPeople; i++)
+        {
+            int index = UnityEngine.Random.Range(0, coordinates.Count);
+            Vector3 cube = coordinates[index];
+            coordinates.RemoveAt(index);
+            Vector2 axial = CubeToAxialCoordinates(cube);
+            //Vector2 screen = AxialToPointyTopSceneCoordinates(axial);
+            Vector2 screen = AxialToFlatTopSceneCoordinates(axial);
+            GameObject person = Instantiate(personTemplate, new Vector3(screen.x, screen.y, 0), Quaternion.identity);
+            peopleMatrix.SetValue((int)axial.x, (int)axial.y, person);
+        }
+
+        return peopleMatrix;
+    }
+
+    private List<Vector3> GetAllCubeCoordinates()
+    {
+        List<Vector3> coordinates = new List<Vector3>();
         for (int i = -mapRadius; i <= mapRadius; i++)
         {
             for (int j = -mapRadius; j <= mapRadius; j++)
@@ -69,16 +142,11 @@ public class MapManager : MonoBehaviour {
                     {
                         continue;
                     }
-                    Vector3 cubeVec = new Vector3(i, j, k);
-                    Vector2 axialVec = CubeToAxialCoordinates(cubeVec);
-                    //Vector2 screenVec = AxialToPointyTopSceneCoordinates(axialVec);
-                    Vector2 screenVec = AxialToFlatTopSceneCoordinates(axialVec);
-                    GameObject hex = Instantiate(hexTemplate, new Vector3(screenVec.x, screenVec.y, 0), Quaternion.identity);
-                    tileMatrix.SetValue((int)axialVec.x, (int)axialVec.y, hex);
+                    coordinates.Add(new Vector3(i, j, k));
                 }
             }
         }
-        return tileMatrix;
+        return coordinates;
     }
 
     private Vector2 CubeToAxialCoordinates(Vector3 cubeCoordinates)
@@ -157,11 +225,11 @@ public class MapManager : MonoBehaviour {
     }
 
 
-    private class TileMatrix : IEnumerable<GameObject>
+    private class GameObjectMatrix : IEnumerable<GameObject>
     {
         private Dictionary<int, Dictionary<int, GameObject>> matrix;
 
-        public TileMatrix()
+        public GameObjectMatrix()
         {
             matrix = new Dictionary<int, Dictionary<int, GameObject>>();
         }
