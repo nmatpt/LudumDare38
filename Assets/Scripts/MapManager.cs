@@ -31,7 +31,8 @@ public class MapManager : MonoBehaviour {
         {
             Vector2 mousePosition = gameCamera.ScreenToWorldPoint(Input.mousePosition);
             //print(Input.mousePosition + " " + mousePosition + " " + gameCamera.ScreenToWorldPoint(Input.mousePosition) + " " + FlatTopSceneToAxialCoordinates(mousePosition));
-            Vector2 selectedTileCoordinates = FlatTopSceneToAxialCoordinates(mousePosition);
+			Vector2 selectedTileCoordinates = PointyTopSceneToAxialCoordinates(mousePosition);           
+			//Vector2 selectedTileCoordinates = FlatTopSceneToAxialCoordinates(mousePosition);
             GameObject tile = matrix.GetValue( (int)selectedTileCoordinates.x, (int)selectedTileCoordinates.y);
             if (tile != null && tile != selectedTile)
             {
@@ -71,8 +72,8 @@ public class MapManager : MonoBehaviour {
                     }
                     Vector3 cubeVec = new Vector3(i, j, k);
                     Vector2 axialVec = CubeToAxialCoordinates(cubeVec);
-                    //Vector2 screenVec = AxialToPointyTopSceneCoordinates(axialVec);
-                    Vector2 screenVec = AxialToFlatTopSceneCoordinates(axialVec);
+                    Vector2 screenVec = AxialToPointyTopSceneCoordinates(axialVec);
+                    //Vector2 screenVec = AxialToFlatTopSceneCoordinates(axialVec);
                     GameObject hex = Instantiate(hexTemplate, new Vector3(screenVec.x, screenVec.y, 0), Quaternion.identity);
                     tileMatrix.SetValue((int)axialVec.x, (int)axialVec.y, hex);
                 }
