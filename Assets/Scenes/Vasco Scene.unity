@@ -408,6 +408,8 @@ MonoBehaviour:
   rocketTemplate: {fileID: 1635883812145392, guid: c89b8460efa844f55933a9483cd5124b,
     type: 2}
   winText: {fileID: 97469102}
+  destroyStartDelay: 1
+  destroyDelay: 1
 --- !u!4 &865658955
 Transform:
   m_ObjectHideFlags: 0
