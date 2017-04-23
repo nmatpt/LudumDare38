@@ -327,6 +327,9 @@ MonoBehaviour:
     type: 2}
   numberOfPeople: 8
   numberOfObstacles: 10
+  chanceOfRandomTiles: 0.08
+  minimumPeopleQuantity: 80
+  maximumPeopleQuantity: 120
   rocketTemplate: {fileID: 1635883812145392, guid: c89b8460efa844f55933a9483cd5124b,
     type: 2}
   meteorTemplate: {fileID: 1250573180892082, guid: cfa416a2ab1d24f459b71227030ee388,
