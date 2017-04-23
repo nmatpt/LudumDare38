@@ -19,6 +19,7 @@ public class MapManager : MonoBehaviour {
 	public int numberOfObstacles;
 
 	public GameObject rocketTemplate;
+	private GameObject rocket;
 	private Vector3 rocketCoordinates;
 	private int nrPersonsIn = 0;
 
@@ -133,6 +134,7 @@ public class MapManager : MonoBehaviour {
                     if (nrPersonsIn >= numberOfPeople)
                     {
                         winText.text = "YOU WIN!!";
+						rocket.GetComponent<RocketManager>().Launch();
                     }
                 }
                 else
@@ -193,7 +195,7 @@ public class MapManager : MonoBehaviour {
 	private Vector3 PlaceRocket()
 	{
         Vector3 rocketScenePosition = new Vector3(0, 0, -1);
-		GameObject rocket = Instantiate(rocketTemplate, rocketScenePosition, Quaternion.identity);
+		rocket = Instantiate(rocketTemplate, rocketScenePosition, Quaternion.identity);
 
         return GridUtils.PointyTopSceneToCubeCoordinates(rocketScenePosition, hexRadius);
 	}
