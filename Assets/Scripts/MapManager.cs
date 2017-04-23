@@ -365,7 +365,7 @@ public class MapManager : MonoBehaviour {
 			.Except(fallingMeteorTiles).ToList()
 			.ToList();
 		
-		if (coordinates.Count <= 1) {
+		if (coordinates.Count <= 0) {
 			print ("YOU LOST!!!!!!!");
 		}else{
 			int maxX = coordinates.Max (c =>  (int) Math.Abs(c.x));
@@ -373,17 +373,28 @@ public class MapManager : MonoBehaviour {
 			int maxZ = coordinates.Max (c => (int) Math.Abs(c.z));
 
 			//Look for border tiles and tiles that have neighbours destroyed
-			List<Vector3> borderTiles = coordinates.FindAll (c => Math.Abs(c.x) == maxX || Math.Abs(c.y) == maxY || Math.Abs(c.z) == maxZ);
+			List<Vector3> borderTiles = coordinates
+				.FindAll (c => Math.Abs (c.x) == maxX || Math.Abs (c.y) == maxY || Math.Abs (c.z) == maxZ)
+				.Except (new List<Vector3>{ rocketCoordinates }).ToList ();
+			
 			List<Vector3> destroyedNeighbours = new List<Vector3> ();
 			destroyedTiles.ForEach (n => destroyedNeighbours.AddRange (ValidNeighbourTiles (n)));
 			destroyedNeighbours = destroyedNeighbours.ToList();
+
+			//Add a small change of selecting tiles from the middle
+			var nrOfRandomTiles = (borderTiles.Count + destroyedNeighbours.Count) / 4;
+			List<Vector3> randomTiles = coordinates
+				.Except(new List<Vector3>{rocketCoordinates})
+				.OrderBy (x => UnityEngine.Random.Range(0, coordinates.Count))
+				.Take (nrOfRandomTiles).ToList();
 
 			//Bias towards border tiles and many destroyed neighbours
 			List <Vector3> selectableTiles = borderTiles
 				.Concat(borderTiles)
 				.Concat(borderTiles)
+				.Concat(randomTiles)
 				.Concat (destroyedNeighbours)
-				.Except(new List<Vector3>{rocketCoordinates}).ToList();
+				.ToList();
 			
 			int index = UnityEngine.Random.Range(0, selectableTiles.Count);
 			Vector3 coordinatesToDestroy = selectableTiles [index];
