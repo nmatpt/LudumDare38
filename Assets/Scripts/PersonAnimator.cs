@@ -55,7 +55,10 @@ public class PersonAnimator : MonoBehaviour {
 
     public void Unselect()
     {
-        animator.SetBool("personHappy", false);
+        if (movingState != MovingStates.Moving)
+        {
+            animator.SetBool("personHappy", false);
+        }
     }
 
     public void SetQuantity(float quantity)
@@ -82,6 +85,7 @@ public class PersonAnimator : MonoBehaviour {
         timeMoving = 0;
         arrow.SetActive(false);
         arrow.transform.rotation = Quaternion.identity;
+        animator.SetBool("personHappy", false);
     }
 
     public void ReadyToMove()
