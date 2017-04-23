@@ -179,7 +179,7 @@ public class MapManager : MonoBehaviour {
 		for (int i = 0; i < numberOfObstacles; i++) {
 			List<Vector3> nonObstacleTiles = cubeCoordinates.Except (obstacles).Except(new List<Vector3>{rocketCoordinates}).ToList();
 			int index = UnityEngine.Random.Range (0, nonObstacleTiles.Count);
-			Vector3 obstacleCoordinates = cubeCoordinates[index];
+			Vector3 obstacleCoordinates = nonObstacleTiles[index];
 			tileMatrix.GetValue (obstacleCoordinates).GetComponent<TileState> ().SetObstacle();
 			obstacles.Add (obstacleCoordinates);
 		}
