@@ -83,7 +83,10 @@ public class MapManager : MonoBehaviour {
                 }
                 */
 
-                selectedPerson.GetComponent<PersonAnimator>().StartMoving();
+                Vector2 movingDirection = GridUtils.CubeToPointyTopSceneCoordinates(clickedTileCoordinates, hexRadius) - GridUtils.CubeToPointyTopSceneCoordinates(selectedTileCoordinates, hexRadius);
+                print(GridUtils.CubeToPointyTopSceneCoordinates(clickedTileCoordinates, hexRadius) + " " + GridUtils.CubeToPointyTopSceneCoordinates(selectedTileCoordinates, hexRadius));
+
+                selectedPerson.GetComponent<PersonAnimator>().StartMoving(movingDirection);
                 movingPeople.Add(new MovingPersonData(selectedPerson, selectedTileCoordinates, clickedTileCoordinates));
 
                 selectedTile.GetComponent<TileState>().Unselect();

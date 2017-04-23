@@ -7,6 +7,7 @@ public class PersonAnimator : MonoBehaviour {
     enum MovingStates { CanMove, Moving, StoppedMoving }
 
     public float timeToMove;
+    public GameObject arrow;
 
     private float quantity = 0;     // tiny hack :p
     private float actualQuantity = 0;
@@ -25,6 +26,14 @@ public class PersonAnimator : MonoBehaviour {
 
         timeMoving = 0;
         movingState = MovingStates.CanMove;
+        for (int i=0; i < transform.childCount; i++)
+        {
+            if (transform.GetChild(i).name == "Arrow")
+            {
+                arrow = transform.GetChild(i).gameObject;
+                break;
+            }
+        }
 	}
 
 	// Update is called once per frame
@@ -59,15 +68,20 @@ public class PersonAnimator : MonoBehaviour {
         }
     }
 
-    public void StartMoving()
+    public void StartMoving(Vector3 direction)
     {
         movingState = MovingStates.Moving;
+        arrow.SetActive(true);
+        print(direction);
+        arrow.transform.Rotate(Vector3.forward * angleBetweenVectors(Vector3.right, direction));
     }
 
     public void StopMoving()
     {
         movingState = MovingStates.StoppedMoving;
         timeMoving = 0;
+        arrow.SetActive(false);
+        arrow.transform.rotation = Quaternion.identity;
     }
 
     public void ReadyToMove()
@@ -83,5 +97,12 @@ public class PersonAnimator : MonoBehaviour {
     public bool HasStoppedMoving()
     {
         return movingState == MovingStates.StoppedMoving;
+    }
+
+    private float angleBetweenVectors(Vector2 vec1, Vector2 vec2)
+    {
+        Vector2 diference = vec2 - vec1;
+        float sign = (vec2.y < vec1.y) ? -1.0f : 1.0f;
+        return Vector2.Angle( vec1, vec2) * sign;
     }
 }
