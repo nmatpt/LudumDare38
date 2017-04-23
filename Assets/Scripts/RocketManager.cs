@@ -14,7 +14,7 @@ public class RocketManager : MonoBehaviour {
 
 	private TextMesh progressText;
 
-	public int buildProgressDivider = 1;
+	public float progressPerPErsonPerSecond = 1;
 	private float nrPeopleIn = 0;
 	private float buildProgress = 0;
 
@@ -46,14 +46,13 @@ public class RocketManager : MonoBehaviour {
 		}	
 	}
 	
-	// Update is called once per frame
 	public void Launch () 
 	{
 		spriteRenderer.sprite = launchSprite;
 		AddForce ();
 		Invoke("AddForce", 2);
 		Invoke("AddForce", 4);
-
+        print("SCORE = " + (int)nrPeopleIn);
 	}
 
 	private void AddForce()
@@ -65,7 +64,10 @@ public class RocketManager : MonoBehaviour {
 
 	public void AddPeople(float nrPeople) 
 	{
-		nrPeopleIn += nrPeople;
+        if (launched == false)
+        {
+            nrPeopleIn += nrPeople;
+        }
 	}
 
 	private void BuildDaemon() {
@@ -74,7 +76,7 @@ public class RocketManager : MonoBehaviour {
 
 	private void BuildRocket()
 	{
-		buildProgress += nrPeopleIn / buildProgressDivider;
+		buildProgress += nrPeopleIn * progressPerPErsonPerSecond;
 		buildProgress = Mathf.Min (buildProgress, 100);
 	}
 }

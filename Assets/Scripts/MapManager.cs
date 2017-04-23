@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using System.Linq;
 
 public class MapManager : MonoBehaviour {
 
@@ -19,10 +18,12 @@ public class MapManager : MonoBehaviour {
     public int numberOfPeople;
 	public int numberOfObstacles;
 
+    public int minimumPeopleQuantity;
+    public int maximumPeopleQuantity;
+
 	public GameObject rocketTemplate;
 	private GameObject rocket;
 	private Vector3 rocketCoordinates;
-	private int nrPersonsIn = 0;
 
     private GameObjectCubeMatrix tileMatrix;
     private GameObjectCubeMatrix peopleMatrix;
@@ -82,19 +83,22 @@ public class MapManager : MonoBehaviour {
                 // move person
 				Vector2 movingDirection = GridUtils.CubeToPointyTopSceneCoordinates(clickedTileCoordinates, hexRadius) - GridUtils.CubeToPointyTopSceneCoordinates(selectedTileCoordinates, hexRadius);
 
-                GameObject destinationPerson = null;
-                if (clickedTileCoordinates == rocketCoordinates)
+                GameObject destinationPerson = peopleMatrix.GetValue(clickedTileCoordinates);
+                if (destinationPerson == null)
                 {
-                    destinationPerson = rocket;
+                    if (clickedTileCoordinates == rocketCoordinates)
+                    {
+                        destinationPerson = rocket;
+                    }
+                    else
+                    {
+                        destinationPerson = Instantiate(personTemplate, GridUtils.CubeToPointyTopSceneCoordinates(clickedTileCoordinates, hexRadius), Quaternion.identity);
+                        destinationPerson.GetComponent<PersonAnimator>().SetQuantity(0);
+                        destinationPerson.GetComponent<PersonAnimator>().SetReceivingPeople();
+                        peopleMatrix.AddValue(clickedTileCoordinates, destinationPerson);
+                    }
                 }
-                else
-                {
-                    destinationPerson = Instantiate(personTemplate, GridUtils.CubeToPointyTopSceneCoordinates(clickedTileCoordinates, hexRadius), Quaternion.identity);
-                    destinationPerson.GetComponent<PersonAnimator>().SetQuantity(0);
-                    destinationPerson.GetComponent<PersonAnimator>().SetReceivingPeople();
-                    peopleMatrix.AddValue(clickedTileCoordinates, destinationPerson);
-                }
-
+                
                 selectedPerson.GetComponent<PersonAnimator>().StartMoving(movingDirection, destinationPerson);
                 movingPeople.Add(new MovingPersonData(selectedPerson, destinationPerson, selectedTileCoordinates, clickedTileCoordinates));
 
@@ -150,6 +154,7 @@ public class MapManager : MonoBehaviour {
                 if (data.OriginPerson.GetComponent<PersonAnimator>().GetQuantity() != 0)
                 {
                     // something happened to destination, and movement was interrupted
+                    data.OriginPerson.GetComponent<PersonAnimator>().StopMoving();
                     data.OriginPerson.GetComponent<PersonAnimator>().ReadyToMove();
                     continue;
                 }
@@ -245,7 +250,7 @@ public class MapManager : MonoBehaviour {
             coordinates.RemoveAt(index);
             Vector2 screen = GridUtils.CubeToPointyTopSceneCoordinates(cube, hexRadius);
             GameObject person = Instantiate(personTemplate, new Vector3(screen.x, screen.y, 0), Quaternion.identity);
-            person.GetComponent<PersonAnimator>().SetQuantity(50);
+            person.GetComponent<PersonAnimator>().SetQuantity(UnityEngine.Random.Range(minimumPeopleQuantity, maximumPeopleQuantity));
             peopleMatrix.AddValue((int)cube.x, (int)cube.y, (int)cube.z, person);
         }
 

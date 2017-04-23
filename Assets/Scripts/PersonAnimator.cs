@@ -44,7 +44,7 @@ public class PersonAnimator : MonoBehaviour {
 	void Update () {
         if (movingState == MovingStates.Moving) {
 
-            if (destinationGO != null) 
+            if (destinationGO != null && destinationGO.activeSelf) 
             {
                 float quantityInTick = movementPerSecond * Time.deltaTime;
                 quantityInTick = Mathf.Min(quantityInTick, quantity);
@@ -142,8 +142,11 @@ public class PersonAnimator : MonoBehaviour {
 
     public void ReadyToMove()
     {
-        movingState = MovingStates.CanMove;
-        //animator.SetBool("personHappy", true);
+        if (destinationGO == null)
+        {
+            movingState = MovingStates.CanMove;
+            //animator.SetBool("personHappy", true);
+        }
     }
 
     public bool CanMove()
@@ -158,7 +161,6 @@ public class PersonAnimator : MonoBehaviour {
 
     private float AngleBetweenVectors(Vector2 vec1, Vector2 vec2)
     {
-        Vector2 diference = vec2 - vec1;
         float sign = (vec2.y < vec1.y) ? -1.0f : 1.0f;
         return Vector2.Angle( vec1, vec2) * sign;
     }
