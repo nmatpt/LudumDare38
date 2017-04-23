@@ -58,7 +58,7 @@ PolygonCollider2D:
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
-    oldSize: {x: 1.1, y: 1.26}
+    oldSize: {x: 0.8730159, y: 1}
     newSize: {x: 1.27, y: 1.27}
     adaptiveTilingThreshold: 0.5
     drawMode: 0
@@ -88,8 +88,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 38c1c9388811041c594a29f3f585c456, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  defaultSprite: {fileID: 21300000, guid: 8ba34203e5155468684467c42251e619, type: 3}
-  selectedSprite: {fileID: 21300000, guid: 3038304dd88404057827be7961e58b71, type: 3}
+  defaultSprite: {fileID: 21300000, guid: 2fb6192a6b6dabf43876ff7044ff80ba, type: 3}
+  selectedSprite: {fileID: 21300000, guid: d110f6e3745e72b44ad10ee0590f2c1d, type: 3}
+  walkableSprite: {fileID: 21300000, guid: 4f0d49a839eb43645bcb4dc5d335abcc, type: 3}
 --- !u!212 &212767309260113008
 SpriteRenderer:
   m_ObjectHideFlags: 1

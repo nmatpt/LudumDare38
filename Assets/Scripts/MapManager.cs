@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public class MapManager : MonoBehaviour {
@@ -25,7 +26,7 @@ public class MapManager : MonoBehaviour {
     private GameObject selectedPerson;
     private Vector3 selectedTileCoordinates;
     private HashSet<GameObject> walkableTiles;
-    
+    private HashSet<MovingPersonData> movingPeople;
 
 	public UnityEngine.UI.Text winText;
 
@@ -40,6 +41,7 @@ public class MapManager : MonoBehaviour {
         selectedPerson = null;
 
         walkableTiles = new HashSet<GameObject>();
+        movingPeople = new HashSet<MovingPersonData>();
     }
 	
 	// Update is called once per frame
@@ -48,19 +50,19 @@ public class MapManager : MonoBehaviour {
         if (Input.GetMouseButtonDown(0))
         {
             Vector2 mousePosition = gameCamera.ScreenToWorldPoint(Input.mousePosition);
-            Vector3 clickedTileCoordinates = PointyTopSceneToCubeCoordinates(mousePosition);
+            Vector3 clickedTileCoordinates = GridUtils.PointyTopSceneToCubeCoordinates(mousePosition, hexRadius);
 
             GameObject tile = tileMatrix.GetValue( (int)clickedTileCoordinates.x, (int)clickedTileCoordinates.y, (int)clickedTileCoordinates.z);
             GameObject person = peopleMatrix.GetValue((int)clickedTileCoordinates.x, (int)clickedTileCoordinates.y, (int)clickedTileCoordinates.z);
 
-            if (selectedTile != null && selectedPerson != null && CubeCoordinatesDistance(selectedTileCoordinates, clickedTileCoordinates) == 1)
+            if (selectedTile != null && selectedPerson != null && GridUtils.CubeCoordinatesDistance(selectedTileCoordinates, clickedTileCoordinates) == 1)
             {
+                /*
                 // It's a move action
-                selectedPerson.transform.position = CubeToPointyTopSceneCoordinates(clickedTileCoordinates);
+                selectedPerson.transform.position = GridUtils.CubeToPointyTopSceneCoordinates(clickedTileCoordinates, hexRadius);
                 peopleMatrix.RemoveValue(selectedTileCoordinates);
 
                 // It's moving inside the rocket
-                print(rocketCoordinates + " " + clickedTileCoordinates);
 				if (rocketCoordinates == clickedTileCoordinates) {					
 					selectedPerson.SetActive (false);
 					nrPersonsIn += 1;
@@ -68,7 +70,15 @@ public class MapManager : MonoBehaviour {
 						winText.text ="YOU WIN!!";
 					}
 				}
-				peopleMatrix.AddValue (clickedTileCoordinates, selectedPerson);
+                else
+                {
+    				peopleMatrix.AddValue (clickedTileCoordinates, selectedPerson);
+                }
+                */
+
+                selectedPerson.GetComponent<PersonAnimator>().StartMoving();
+                movingPeople.Add(new MovingPersonData(selectedPerson, selectedTileCoordinates, clickedTileCoordinates));
+
                 selectedTile.GetComponent<TileState>().Unselect();
                 selectedTile = null;
                 ResetWalkableTiles();
@@ -93,7 +103,7 @@ public class MapManager : MonoBehaviour {
                 }
 
                 // handle people
-                if (person != null && person != selectedPerson)
+                if (person != null && person != selectedPerson && person.GetComponent<PersonAnimator>().CanMove())
                 {
                     if (selectedPerson != null)
                     {
@@ -109,10 +119,36 @@ public class MapManager : MonoBehaviour {
                     selectedPerson = null;
                 }
             }
-
-
-            
         }
+
+        List<MovingPersonData> finishedMoving = movingPeople.Where(x => x.Person.GetComponent<PersonAnimator>().HasStoppedMoving()).ToList();
+
+        foreach (MovingPersonData data in finishedMoving)
+        {
+            if (data.Person.GetComponent<PersonAnimator>().HasStoppedMoving())
+            {
+                data.Person.transform.position = GridUtils.CubeToPointyTopSceneCoordinates(data.Destination, hexRadius);
+                peopleMatrix.RemoveValue(data.Origin);
+
+                // It's moving inside the rocket
+                if (rocketCoordinates == data.Destination)
+                {
+                    data.Person.SetActive(false);
+                    nrPersonsIn += 1;
+                    if (nrPersonsIn >= numberOfPeople)
+                    {
+                        winText.text = "YOU WIN!!";
+                    }
+                }
+                else
+                {
+                    peopleMatrix.AddValue(data.Destination, data.Person);
+                }
+                data.Person.GetComponent<PersonAnimator>().ReadyToMove();
+                movingPeople.Remove(data);
+            }
+        }
+
 
         if (Input.GetKeyDown(KeyCode.Space))
         {
@@ -138,7 +174,7 @@ public class MapManager : MonoBehaviour {
 
         foreach (Vector3 cubeVec in GetAllCubeCoordinates())
         {
-            Vector2 screenVec = CubeToPointyTopSceneCoordinates(cubeVec);
+            Vector2 screenVec = GridUtils.CubeToPointyTopSceneCoordinates(cubeVec, hexRadius);
             GameObject hex = Instantiate(hexTemplate, new Vector3(screenVec.x, screenVec.y, 0), Quaternion.identity);
             tileMatrix.AddValue((int)cubeVec.x, (int)cubeVec.y, (int)cubeVec.z, hex);
         }
@@ -151,7 +187,7 @@ public class MapManager : MonoBehaviour {
         Vector3 rocketScenePosition = new Vector3(0, 0, -1);
 		GameObject rocket = Instantiate(rocketTemplate, rocketScenePosition, Quaternion.identity);
 
-        return PointyTopSceneToCubeCoordinates(rocketScenePosition);
+        return GridUtils.PointyTopSceneToCubeCoordinates(rocketScenePosition, hexRadius);
 	}
 
     private GameObjectCubeMatrix PopulateMap()
@@ -179,8 +215,9 @@ public class MapManager : MonoBehaviour {
             int index = UnityEngine.Random.Range(0, coordinates.Count);
             Vector3 cube = coordinates[index];
             coordinates.RemoveAt(index);
-            Vector2 screen = CubeToPointyTopSceneCoordinates(cube);
+            Vector2 screen = GridUtils.CubeToPointyTopSceneCoordinates(cube, hexRadius);
             GameObject person = Instantiate(personTemplate, new Vector3(screen.x, screen.y, 0), Quaternion.identity);
+            person.GetComponent<PersonAnimator>().SetQuantity(1000);
             peopleMatrix.AddValue((int)cube.x, (int)cube.y, (int)cube.z, person);
         }
 
@@ -189,7 +226,7 @@ public class MapManager : MonoBehaviour {
 
     private void ActivateWalkableTiles(Vector3 centerTileCubeCoordinates)
     {
-        foreach (Vector3 vec in CubeCoordinatesNeightbours(centerTileCubeCoordinates))
+        foreach (Vector3 vec in GridUtils.CubeCoordinatesNeightbours(centerTileCubeCoordinates))
         {
             GameObject go = tileMatrix.GetValue(vec);
             if (go != null)
@@ -229,221 +266,17 @@ public class MapManager : MonoBehaviour {
         return coordinates;
     }
 
-    //////////////////////////////////////////////////
-    // TODO
-    // This whole thing is an inneficient mess. 
-    // Rewrite for direct Cube-To-Screen conversion
-    //////////////////////////////////////////////////
-
-    // Cube Coordinates to X
-    private Vector2 CubeToAxialCoordinates(Vector3 cubeCoordinates)
+    private class MovingPersonData
     {
-        float x = cubeCoordinates.x;
-        float y = cubeCoordinates.z;
-        return new Vector2(x, y);
-    }
+        public GameObject Person { get; set; }
+        public Vector3 Origin { get; set; }
+        public Vector3 Destination { get; set; }
 
-    private Vector2 CubeToFlatTopSceneCoordinates(Vector3 cubeCoordinates)
-    {
-        return AxialToFlatTopSceneCoordinates(CubeToAxialCoordinates(cubeCoordinates));
-    }
-
-    private Vector2 CubeToPointyTopSceneCoordinates(Vector3 cubeCoordinates)
-    {
-        return AxialToPointyTopSceneCoordinates(CubeToAxialCoordinates(cubeCoordinates));
-    }
-
-    // Axial Coordinates to X
-    private Vector3 AxialToCubeCoordinates(Vector2 axialCoordinates)
-    {
-        float x = axialCoordinates.x;
-        float z = axialCoordinates.y;
-        float y = -x - z;
-        return new Vector3(x, y, z);
-    }
-
-    private Vector2 AxialToFlatTopSceneCoordinates(Vector2 axialCoordinates)
-    {
-        float x = hexRadius * 3 / 2 * axialCoordinates.x;
-        float y = hexRadius * Mathf.Sqrt(3) * (axialCoordinates.y + axialCoordinates.x / 2);
-        return new Vector2(x, y);
-    }
-
-    private Vector2 AxialToPointyTopSceneCoordinates(Vector2 axialCoordinates)
-    {
-        float x = hexRadius * Mathf.Sqrt(3) * (axialCoordinates.x + axialCoordinates.y / 2);
-        float y = hexRadius * 3 / 2 * axialCoordinates.y;
-
-        return new Vector2(x, y);
-    }
-
-    // Scene Coordinates to X
-    private Vector2 FlatTopSceneToAxialCoordinates(Vector2 sceneCoordinates)
-    {
-        float x = sceneCoordinates.x * 2 / 3 / hexRadius;
-        float y = (-sceneCoordinates.x / 3 + Mathf.Sqrt(3) / 3 * sceneCoordinates.y) / hexRadius;
-        return RoundAxialCoordinates(new Vector2(x, y));
-    }
-
-    private Vector2 PointyTopSceneToAxialCoordinates(Vector2 sceneCoordinates)
-    {
-        float x = (sceneCoordinates.x * Mathf.Sqrt(3) / 3 - sceneCoordinates.y / 3) / hexRadius;
-        float y = sceneCoordinates.y * 2 / 3 / hexRadius;
-        return RoundAxialCoordinates(new Vector2(x, y));
-    }
-
-    private Vector3 FlatTopSceneToCubeCoordinates(Vector3 sceneCoordinates)
-    {
-        return AxialToCubeCoordinates(FlatTopSceneToAxialCoordinates(sceneCoordinates));
-    }
-
-    private Vector3 PointyTopSceneToCubeCoordinates(Vector3 sceneCoordinates)
-    {
-        return AxialToCubeCoordinates(PointyTopSceneToAxialCoordinates(sceneCoordinates));
-    }
-
-    // Other coordinate stuff
-    private Vector3 RoundCubeCoordinates(Vector3 coordinates)
-    {
-        float x = Mathf.Round(coordinates.x);
-        float y = Mathf.Round(coordinates.y);
-        float z = Mathf.Round(coordinates.z);
-
-        float x_diff = Mathf.Abs(x - coordinates.x);
-        float y_diff = Mathf.Abs(y - coordinates.y);
-        float z_diff = Mathf.Abs(z - coordinates.z);
-
-        if (x_diff > y_diff && x_diff > z_diff)
+        public MovingPersonData(GameObject person, Vector3 origin, Vector3 destination)
         {
-            x = -y - z;
-        }
-        else if (y_diff > z_diff)
-        {
-            y = -x - z;
-        }
-        else
-        {
-            z = -x - y;
-        }
-
-        return new Vector3(x, y, z);
-    }
-
-    private Vector2 RoundAxialCoordinates(Vector2 coordinates)
-    {
-        return CubeToAxialCoordinates(RoundCubeCoordinates(AxialToCubeCoordinates(coordinates)));
-    }
-
-    private float CubeCoordinatesDistance(Vector3 pos1, Vector3 pos2)
-    {
-        return Mathf.Max(Mathf.Abs(pos1.x - pos2.x), Mathf.Abs(pos1.y - pos2.y), Mathf.Abs(pos1.z - pos2.z));
-    }
-
-    private HashSet<Vector3> CubeCoordinatesNeightbours(Vector3 vec)
-    {
-        HashSet<Vector3> vectors = new HashSet<Vector3>();
-        vectors.Add(vec + new Vector3(-1, 1, 0));
-        vectors.Add(vec + new Vector3(-1, 0, 1));
-        vectors.Add(vec + new Vector3(0, 1, -1));
-        vectors.Add(vec + new Vector3(0, -1, 1));
-        vectors.Add(vec + new Vector3(1, -1, 0));
-        vectors.Add(vec + new Vector3(1, 0, -1));
-
-        return vectors;
-    }
-
-    private class GameObjectCubeMatrix : IEnumerable<GameObject>
-    {
-        private Dictionary<int, Dictionary<int, Dictionary<int, GameObject>>> matrix;
-
-        public GameObjectCubeMatrix()
-        {
-            matrix = new Dictionary<int, Dictionary<int, Dictionary<int, GameObject>>>();
-        }
-
-        public void AddValue(int x, int y, int z, GameObject value)
-        {
-            Dictionary<int, Dictionary<int, GameObject>> dict1 = null;
-            try
-            {
-                dict1 = matrix[x];
-            }
-            catch (KeyNotFoundException)
-            {
-                dict1 = new Dictionary<int, Dictionary<int, GameObject>>();
-                matrix[x] = dict1;
-            }
-
-            Dictionary<int, GameObject> dict2 = null;
-            try
-            {
-                dict2 = dict1[y];
-            }
-            catch (KeyNotFoundException)
-            {
-                dict2 = new Dictionary<int, GameObject>();
-                dict1[y] = dict2;
-            }
-
-            dict2[z] = value;
-        }
-
-        public void AddValue(Vector3 vec, GameObject gameObject)
-        {
-            AddValue((int)vec.x, (int)vec.y, (int)vec.z, gameObject);
-        }
-
-        public GameObject GetValue(int x, int y, int z)
-        {
-            try
-            {
-                return matrix[x][y][z];
-            }
-            catch (KeyNotFoundException)
-            {
-                return null;
-            }
-        }
-
-        public GameObject GetValue(Vector3 vec)
-        {
-            return GetValue((int)vec.x, (int)vec.y, (int)vec.z);
-        }
-
-        public void RemoveValue(int x, int y, int z)
-        {
-            try
-            {
-                matrix[x][y].Remove(z);
-            }
-            catch (KeyNotFoundException)
-            {
-                // pass silently
-            }
-        }
-
-        public void RemoveValue(Vector3 vec)
-        {
-            RemoveValue((int)vec.x, (int)vec.y, (int)vec.z);
-        }
-
-        public IEnumerator<GameObject> GetEnumerator()
-        {
-            foreach (int x in matrix.Keys)
-            {
-                foreach (int y in matrix[x].Keys)
-                {
-                    foreach (int z in matrix[x][y].Keys)
-                    {
-                        yield return matrix[x][y][z];
-                    }
-                }
-            }
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
+            Person = person;
+            Origin = origin;
+            Destination = destination;
         }
     }
 }
