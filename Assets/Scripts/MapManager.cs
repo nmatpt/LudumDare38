@@ -420,9 +420,13 @@ public class MapManager : MonoBehaviour {
         {
             person.SetActive(false);
             peopleMatrix.RemoveValue(cubeCoordinates);
-            print("DEAD PERSON YOU LOST!!!!!!!");
+            print("DEAD PERSON!!!!!!!");
         }
-
+		if(cubeCoordinates == rocketCoordinates)
+		{
+			rocket.SetActive (false);
+			print("YOU LOST THE GAME!!!!!!!");			
+		}
         tile.GetComponent<TileState>().Destroy();
         destroyedTiles.Add(cubeCoordinates);
     }
