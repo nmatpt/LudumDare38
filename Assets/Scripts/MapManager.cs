@@ -82,10 +82,18 @@ public class MapManager : MonoBehaviour {
                 // move person
 				Vector2 movingDirection = GridUtils.CubeToPointyTopSceneCoordinates(clickedTileCoordinates, hexRadius) - GridUtils.CubeToPointyTopSceneCoordinates(selectedTileCoordinates, hexRadius);
 
-                GameObject destinationPerson = Instantiate(personTemplate, GridUtils.CubeToPointyTopSceneCoordinates(clickedTileCoordinates, hexRadius), Quaternion.identity);
-                destinationPerson.GetComponent<PersonAnimator>().SetQuantity(0);
-                destinationPerson.GetComponent<PersonAnimator>().SetReceivingPeople();
-                peopleMatrix.AddValue(clickedTileCoordinates, destinationPerson);
+                GameObject destinationPerson = null;
+                if (clickedTileCoordinates == rocketCoordinates)
+                {
+                    destinationPerson = rocket;
+                }
+                else
+                {
+                    destinationPerson = Instantiate(personTemplate, GridUtils.CubeToPointyTopSceneCoordinates(clickedTileCoordinates, hexRadius), Quaternion.identity);
+                    destinationPerson.GetComponent<PersonAnimator>().SetQuantity(0);
+                    destinationPerson.GetComponent<PersonAnimator>().SetReceivingPeople();
+                    peopleMatrix.AddValue(clickedTileCoordinates, destinationPerson);
+                }
 
                 selectedPerson.GetComponent<PersonAnimator>().StartMoving(movingDirection, destinationPerson);
                 movingPeople.Add(new MovingPersonData(selectedPerson, destinationPerson, selectedTileCoordinates, clickedTileCoordinates));
@@ -148,29 +156,11 @@ public class MapManager : MonoBehaviour {
 
                 //data.OriginPerson.transform.position = GridUtils.CubeToPointyTopSceneCoordinates(data.Destination, hexRadius);
                 peopleMatrix.RemoveValue(data.Origin);
-                
 
-                // It's moving inside the rocket
-                if (rocketCoordinates == data.Destination)
+                if (data.DestinationPerson.tag != "Rocket")
                 {
-					RocketManager rocketManager = rocket.GetComponent<RocketManager>();
-                    data.OriginPerson.SetActive(false);
-
-                    nrPersonsIn += 1;
-					rocketManager.AddPeople (1);
-                    if (nrPersonsIn >= numberOfPeople)
-                    {
-						//TODO: change this
-                        //winText.text = "YOU WIN!!";
-                    }
+                    data.DestinationPerson.GetComponent<PersonAnimator>().ReadyToMove();
                 }
-                else
-                {
-                    peopleMatrix.AddValue(data.Destination, data.DestinationPerson);
-                }
-                //data.OriginPerson.GetComponent<PersonAnimator>().ReadyToMove();
-
-                data.DestinationPerson.GetComponent<PersonAnimator>().ReadyToMove();
                 data.OriginPerson.SetActive(false);
             }
         }

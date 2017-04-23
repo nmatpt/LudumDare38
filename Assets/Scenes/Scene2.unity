@@ -318,7 +318,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   gameCamera: {fileID: 404044236}
-  mapRadius: 4
+  mapRadius: 5
+  mapHeightThreshold: 4
   hexTemplate: {fileID: 1890935116651982, guid: 20ef578ba704441708baa03d07c8ddb0,
     type: 2}
   hexRadius: 0.5

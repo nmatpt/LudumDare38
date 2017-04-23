@@ -15,7 +15,7 @@ public class PersonAnimator : MonoBehaviour {
 	private Animator animator;
     private TextMesh playerCountText;
 
-    private GameObject destinationPerson;
+    private GameObject destinationGO;
 
 	// Use this for initialization
 	void Start () {
@@ -43,12 +43,21 @@ public class PersonAnimator : MonoBehaviour {
 	// Update is called once per frame
 	void Update () {
         if (movingState == MovingStates.Moving) {
-            if (destinationPerson != null && destinationPerson.activeSelf == true)
+
+            if (destinationGO != null) 
             {
                 float quantityInTick = movementPerSecond * Time.deltaTime;
                 quantityInTick = Mathf.Min(quantityInTick, quantity);
 
-                destinationPerson.GetComponent<PersonAnimator>().AddQuantity(quantityInTick);
+                switch (destinationGO.tag)
+                {
+                    case "Rocket":
+                        destinationGO.GetComponent<RocketManager>().AddPeople(quantityInTick);
+                        break;
+                    default:
+                        destinationGO.GetComponent<PersonAnimator>().AddQuantity(quantityInTick);
+                        break;
+                }
                 AddQuantity(-quantityInTick);
 
                 if (quantity <= 0)
@@ -56,9 +65,9 @@ public class PersonAnimator : MonoBehaviour {
                     StopMoving();
                 }
             }
-            else // something happened to the destination person :'(
+            else
             {
-                print("DESTINATION PERSON DEAD. OR WORSE");
+                print("DESTINATION DESTROYED. OR WORSE");
                 StopMoving();
             }
         }
@@ -66,9 +75,9 @@ public class PersonAnimator : MonoBehaviour {
 
     private void OnDisable()
     {
-        if(destinationPerson != null && destinationPerson.activeSelf == true)
+        if(destinationGO != null && destinationGO.activeSelf == true)
         {
-            destinationPerson.GetComponent<PersonAnimator>().ReadyToMove();
+            destinationGO.GetComponent<PersonAnimator>().ReadyToMove();
         }
     }
 
@@ -110,7 +119,7 @@ public class PersonAnimator : MonoBehaviour {
         movingState = MovingStates.Moving;
         arrow.SetActive(true);
         arrow.transform.Rotate(Vector3.forward * AngleBetweenVectors(Vector3.right, direction));
-        this.destinationPerson = destinationPerson;
+        this.destinationGO = destinationPerson;
     }
 
     public void StopMoving()
@@ -119,6 +128,7 @@ public class PersonAnimator : MonoBehaviour {
         arrow.SetActive(false);
         arrow.transform.rotation = Quaternion.identity;
         animator.SetBool("personHappy", false);
+        destinationGO = null;
     }
 
     public void SetReceivingPeople()
