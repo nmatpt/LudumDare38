@@ -52,7 +52,7 @@ public class PersonAnimator : MonoBehaviour {
                 switch (destinationGO.tag)
                 {
                     case "Rocket":
-					destinationGO.GetComponent<RocketManager>().AddPeople((int)quantityInTick);
+					    destinationGO.GetComponent<RocketManager>().AddPeople(quantityInTick);
                         break;
                     default:
                         destinationGO.GetComponent<PersonAnimator>().AddQuantity(quantityInTick);

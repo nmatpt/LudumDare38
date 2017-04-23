@@ -296,12 +296,15 @@ MonoBehaviour:
     type: 2}
   numberOfPeople: 12
   numberOfObstacles: 25
+  chanceOfRandomTiles: 0.08
   minimumPeopleQuantity: 50
   maximumPeopleQuantity: 120
   rocketTemplate: {fileID: 1635883812145392, guid: c89b8460efa844f55933a9483cd5124b,
     type: 2}
+  meteorTemplate: {fileID: 1250573180892082, guid: cfa416a2ab1d24f459b71227030ee388,
+    type: 2}
   destroyStartDelay: 5
-  destroyDelay: 3
+  destroyDelay: 2
 --- !u!4 &865658955
 Transform:
   m_ObjectHideFlags: 0

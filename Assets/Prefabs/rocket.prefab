@@ -186,7 +186,7 @@ MonoBehaviour:
   defaultSprite: {fileID: 21300000, guid: 8025ad987006f4cc09f17545d7264672, type: 3}
   launchSprite: {fileID: 21300000, guid: f578d7440701d4442897f47dc43c028a, type: 3}
   launchSpeed: 10
-  progressPerPErsonPerSecond: 0.02
+  progressPerPersonPerSecond: 0.02
 --- !u!212 &212074463215273140
 SpriteRenderer:
   m_ObjectHideFlags: 1

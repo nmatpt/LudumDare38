@@ -213,7 +213,6 @@ public class MapManager : MonoBehaviour {
 
 		foreach (var item in toDestroy) {
 			var tileHexCoordinates = item.TileCoordinate;
-			print("Destroying tile " + tileHexCoordinates);
 			item.Meteor.SetActive (false);
 			DestroyTileAt(tileHexCoordinates);		
 			fallingMeteors.Remove (item);
