@@ -33,7 +33,7 @@ public class MapManager : MonoBehaviour {
 	private List<Vector3> destroyedTiles;
 	private List<Vector3> obstacles;
 
-	public UnityEngine.UI.Text winText;
+	//public UnityEngine.UI.Text winText;
 
 	public float destroyStartDelay = 1.0f;
 	public float destroyDelay = 1.0f;
@@ -129,12 +129,14 @@ public class MapManager : MonoBehaviour {
                 // It's moving inside the rocket
                 if (rocketCoordinates == data.Destination)
                 {
+					RocketManager rocketManager = rocket.GetComponent<RocketManager>();
                     data.Person.SetActive(false);
                     nrPersonsIn += 1;
+					rocketManager.AddPeople (1);
                     if (nrPersonsIn >= numberOfPeople)
                     {
-                        winText.text = "YOU WIN!!";
-						rocket.GetComponent<RocketManager>().Launch();
+						//TODO: change this
+                        //winText.text = "YOU WIN!!";
                     }
                 }
                 else
