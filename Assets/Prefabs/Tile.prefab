@@ -92,6 +92,7 @@ MonoBehaviour:
   selectedSprite: {fileID: 21300000, guid: d110f6e3745e72b44ad10ee0590f2c1d, type: 3}
   destroyedSprite: {fileID: 21300000, guid: d7ec7de84e991400892aad6afba2c4ef, type: 3}
   walkableSprite: {fileID: 21300000, guid: 4f0d49a839eb43645bcb4dc5d335abcc, type: 3}
+  obstacleSprite: {fileID: 21300000, guid: 5432706b6c0ec46499b863393c5aae67, type: 3}
 --- !u!212 &212767309260113008
 SpriteRenderer:
   m_ObjectHideFlags: 1
