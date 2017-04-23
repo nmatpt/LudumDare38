@@ -16,6 +16,7 @@ public class MapManager : MonoBehaviour {
 
     public GameObject personTemplate;
     public int numberOfPeople;
+	public int numberOfObstacles;
 
 	public GameObject rocketTemplate;
 	private Vector3 rocketCoordinates;
@@ -29,6 +30,7 @@ public class MapManager : MonoBehaviour {
     private HashSet<GameObject> walkableTiles;
     private HashSet<MovingPersonData> movingPeople;
 	private List<Vector3> destroyedTiles;
+	private List<Vector3> obstacles;
 
 	public UnityEngine.UI.Text winText;
 
@@ -37,17 +39,19 @@ public class MapManager : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
+		walkableTiles = new HashSet<GameObject>();
+		movingPeople = new HashSet<MovingPersonData>();
+		destroyedTiles = new List<Vector3> ();
+		obstacles = new List<Vector3> ();
 
-        tileMatrix = GenerateMap();
-        peopleMatrix = PopulateMap();
 		rocketCoordinates = PlaceRocket ();
+		tileMatrix = GenerateMap();
+        peopleMatrix = PopulateMap();
+
 
         selectedTile = null;
         selectedPerson = null;
 
-        walkableTiles = new HashSet<GameObject>();
-        movingPeople = new HashSet<MovingPersonData>();
-		destroyedTiles = new List<Vector3> ();
 		DestructionDaemon ();
     }
 	
@@ -64,26 +68,7 @@ public class MapManager : MonoBehaviour {
 
 			if (selectedTile != null && selectedPerson != null && ValidNeighbourTiles(selectedTileCoordinates).Contains(clickedTileCoordinates))
             {
-                /*
-                // It's a move action
-                selectedPerson.transform.position = GridUtils.CubeToPointyTopSceneCoordinates(clickedTileCoordinates, hexRadius);
-                peopleMatrix.RemoveValue(selectedTileCoordinates);
-
-                // It's moving inside the rocket
-				if (rocketCoordinates == clickedTileCoordinates) {					
-					selectedPerson.SetActive (false);
-					nrPersonsIn += 1;
-					if (nrPersonsIn >= numberOfPeople) {
-						winText.text ="YOU WIN!!";
-					}
-				}
-                else
-                {
-    				peopleMatrix.AddValue (clickedTileCoordinates, selectedPerson);
-                }
-                */
-
-                Vector2 movingDirection = GridUtils.CubeToPointyTopSceneCoordinates(clickedTileCoordinates, hexRadius) - GridUtils.CubeToPointyTopSceneCoordinates(selectedTileCoordinates, hexRadius);
+				Vector2 movingDirection = GridUtils.CubeToPointyTopSceneCoordinates(clickedTileCoordinates, hexRadius) - GridUtils.CubeToPointyTopSceneCoordinates(selectedTileCoordinates, hexRadius);
                 print(GridUtils.CubeToPointyTopSceneCoordinates(clickedTileCoordinates, hexRadius) + " " + GridUtils.CubeToPointyTopSceneCoordinates(selectedTileCoordinates, hexRadius));
 
                 selectedPerson.GetComponent<PersonAnimator>().StartMoving(movingDirection);
@@ -181,13 +166,26 @@ public class MapManager : MonoBehaviour {
     private GameObjectCubeMatrix GenerateMap()
     {
         GameObjectCubeMatrix tileMatrix = new GameObjectCubeMatrix();
-
-        foreach (Vector3 cubeVec in GetAllCubeCoordinates())
+		List<Vector3> cubeCoordinates = GetAllCubeCoordinates ();
+		foreach (Vector3 cubeVec in cubeCoordinates)
         {
             Vector2 screenVec = GridUtils.CubeToPointyTopSceneCoordinates(cubeVec, hexRadius);
             GameObject hex = Instantiate(hexTemplate, new Vector3(screenVec.x, screenVec.y, 0), Quaternion.identity);
             tileMatrix.AddValue((int)cubeVec.x, (int)cubeVec.y, (int)cubeVec.z, hex);
         }
+
+		if (numberOfObstacles > cubeCoordinates.Count - 1 - numberOfPeople)
+		{
+			throw new Exception("Too many obstacles");
+		}
+
+		for (int i = 0; i < numberOfObstacles; i++) {
+			List<Vector3> nonObstacleTiles = cubeCoordinates.Except (obstacles).Except(new List<Vector3>{rocketCoordinates}).ToList();
+			int index = UnityEngine.Random.Range (0, nonObstacleTiles.Count);
+			Vector3 obstacleCoordinates = nonObstacleTiles[index];
+			tileMatrix.GetValue (obstacleCoordinates).GetComponent<TileState> ().SetObstacle();
+			obstacles.Add (obstacleCoordinates);
+		}
 
         return tileMatrix;
     }
@@ -249,7 +247,11 @@ public class MapManager : MonoBehaviour {
 
 	private List<Vector3> ValidNeighbourTiles(Vector3 coordinates)
 	{
-		return GridUtils.CubeCoordinatesNeightbours (coordinates).Except (destroyedTiles).Where(c => tileMatrix.GetValue(c) != null).ToList();
+		return GridUtils.CubeCoordinatesNeightbours (coordinates)
+			.Except (destroyedTiles)
+			.Except (obstacles)
+			.Where(c => tileMatrix.GetValue(c) != null)
+			.ToList();
 	}
 
     private void ResetWalkableTiles()
