@@ -20,6 +20,7 @@ public class MapManager : MonoBehaviour {
 	public int numberOfObstacles;
 
 	public GameObject rocketTemplate;
+	public GameObject meteorTemplate;
 	private GameObject rocket;
 	private Vector3 rocketCoordinates;
 	private int nrPersonsIn = 0;
@@ -306,6 +307,26 @@ public class MapManager : MonoBehaviour {
 
 	private void DestructionDaemon() {
 		InvokeRepeating	("RandomlyDestroyTile", destroyStartDelay, destroyDelay);
+		InvokeRepeating	("LaunchMeteor", destroyStartDelay, 8.0f);
+	}
+
+	private void LaunchMeteor(Vector3 tileCoordinate){
+		print ("new meteor");
+		Vector2 screenBounds = gameCamera.ScreenToWorldPoint(new Vector2(Screen.width, Screen.height));
+		Vector3 meteorStartPosition =  new Vector3(0,screenBounds.y + 1, -5);
+
+		Vector2 meteorStartScreenCoordinate =  new Vector2(meteorStartPosition.x, meteorStartPosition.y);
+		Vector2 tileScreenCoordinate = GridUtils.CubeToPointyTopSceneCoordinates (tileCoordinate, hexRadius);
+
+		Vector2 direction = (tileScreenCoordinate - meteorStartScreenCoordinate).normalized;
+		print ("meteorStartPosition:" + meteorStartScreenCoordinate);
+		print ("tileCoordinate:" + tileScreenCoordinate);
+		print ("direction:" + direction);
+
+		float speed = 40.0f;
+
+		GameObject meteor = Instantiate(meteorTemplate, meteorStartPosition, Quaternion.identity);
+		meteor.GetComponent < MetorMovement> ().MoveTo (direction * speed);
 	}
 
 	private void RandomlyDestroyTile(){
@@ -336,7 +357,8 @@ public class MapManager : MonoBehaviour {
 			int index = UnityEngine.Random.Range(0, selectableTiles.Count);
 			Vector3 coordinatesToDestroy = selectableTiles [index];
 
-            DestroyTileAt(coordinatesToDestroy);
+			LaunchMeteor (coordinatesToDestroy);
+			DestroyTileAt(coordinatesToDestroy);
 		}
 	}
 

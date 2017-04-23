@@ -15,8 +15,8 @@ public class RocketManager : MonoBehaviour {
 	private TextMesh progressText;
 
 	public int buildProgressDivider = 1;
-	private float nrPeopleIn = 0;
-	private float buildProgress = 0;
+	private int nrPeopleIn = 0;
+	private int buildProgress = 0;
 
 	private bool launched = false;
 
@@ -32,16 +32,16 @@ public class RocketManager : MonoBehaviour {
 	void Update()
 	{
 		if(!launched){
-			string text = (int)buildProgress + "%";
+			string text = buildProgress + "%";
 			if (buildProgress >= 100) {
 				text = "Ready! Press space to launch.";
 			}
 			progressText.text = text;
 
 			if (Input.GetKeyDown(KeyCode.Space) && buildProgress >= 100) {
-			    launched = true;
+					launched = true;
 				Launch ();
-				progressText.text = "";
+					progressText.text = "";
 			}	
 		}	
 	}
@@ -63,7 +63,7 @@ public class RocketManager : MonoBehaviour {
 	}
 		
 
-	public void AddPeople(float nrPeople) 
+	public void AddPeople(int nrPeople) 
 	{
 		nrPeopleIn += nrPeople;
 	}
