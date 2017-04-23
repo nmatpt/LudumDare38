@@ -20,6 +20,7 @@ public class MapManager : MonoBehaviour {
 	public int numberOfObstacles;
 
 	public GameObject rocketTemplate;
+	private GameObject rocket;
 	private Vector3 rocketCoordinates;
 	private int nrPersonsIn = 0;
 
@@ -33,7 +34,7 @@ public class MapManager : MonoBehaviour {
 	private List<Vector3> destroyedTiles;
 	private List<Vector3> obstacles;
 
-	public UnityEngine.UI.Text winText;
+	//public UnityEngine.UI.Text winText;
 
 	public float destroyStartDelay = 1.0f;
 	public float destroyDelay = 1.0f;
@@ -143,11 +144,15 @@ public class MapManager : MonoBehaviour {
                 // It's moving inside the rocket
                 if (rocketCoordinates == data.Destination)
                 {
+					RocketManager rocketManager = rocket.GetComponent<RocketManager>();
                     data.OriginPerson.SetActive(false);
+
                     nrPersonsIn += 1;
+					rocketManager.AddPeople (1);
                     if (nrPersonsIn >= numberOfPeople)
                     {
-                        winText.text = "YOU WIN!!";
+						//TODO: change this
+                        //winText.text = "YOU WIN!!";
                     }
                 }
                 else
@@ -209,7 +214,7 @@ public class MapManager : MonoBehaviour {
 	private Vector3 PlaceRocket()
 	{
         Vector3 rocketScenePosition = new Vector3(0, 0, -1);
-		GameObject rocket = Instantiate(rocketTemplate, rocketScenePosition, Quaternion.identity);
+		rocket = Instantiate(rocketTemplate, rocketScenePosition, Quaternion.identity);
 
         return GridUtils.PointyTopSceneToCubeCoordinates(rocketScenePosition, hexRadius);
 	}
