@@ -34,11 +34,11 @@ public class RocketManager : MonoBehaviour {
 		if(!launched){
 			string text = buildProgress + "%";
 			if (buildProgress >= 100) {
-				text = "Ready! Click to launch.";
+				text = "Ready! Press space to launch.";
 			}
 			progressText.text = text;
 
-			if (Input.GetMouseButtonDown (0) && buildProgress >= 100) {
+			if (Input.GetKeyDown(KeyCode.Space) && buildProgress >= 100)) {
 					launched = true;
 				Launch ();
 					progressText.text = "";
@@ -53,6 +53,7 @@ public class RocketManager : MonoBehaviour {
 		AddForce ();
 		Invoke("AddForce", 2);
 		Invoke("AddForce", 4);
+
 	}
 
 	private void AddForce()

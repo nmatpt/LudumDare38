@@ -175,7 +175,7 @@ public class MapManager : MonoBehaviour {
             }
         }
 
-        if (Input.GetKeyDown(KeyCode.Space))
+        if (Input.GetKeyDown(KeyCode.Return))
         {
             selectedTile = null;
             foreach (GameObject go in tileMatrix)
