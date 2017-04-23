@@ -37,7 +37,6 @@ public class PersonAnimator : MonoBehaviour {
                 StopMoving();
             }
         }
-        print(movingState);
 	}
 
     public void Select()

@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using System.Linq;
 
 public class MapManager : MonoBehaviour {
 
@@ -27,8 +28,12 @@ public class MapManager : MonoBehaviour {
     private Vector3 selectedTileCoordinates;
     private HashSet<GameObject> walkableTiles;
     private HashSet<MovingPersonData> movingPeople;
+	private List<Vector3> destroyedTiles;
 
 	public UnityEngine.UI.Text winText;
+
+	public float destroyStartDelay = 1.0f;
+	public float destroyDelay = 1.0f;
 
 	// Use this for initialization
 	void Start () {
@@ -42,6 +47,8 @@ public class MapManager : MonoBehaviour {
 
         walkableTiles = new HashSet<GameObject>();
         movingPeople = new HashSet<MovingPersonData>();
+		destroyedTiles = new List<Vector3> ();
+		DestructionDaemon ();
     }
 	
 	// Update is called once per frame
@@ -55,7 +62,7 @@ public class MapManager : MonoBehaviour {
             GameObject tile = tileMatrix.GetValue( (int)clickedTileCoordinates.x, (int)clickedTileCoordinates.y, (int)clickedTileCoordinates.z);
             GameObject person = peopleMatrix.GetValue((int)clickedTileCoordinates.x, (int)clickedTileCoordinates.y, (int)clickedTileCoordinates.z);
 
-            if (selectedTile != null && selectedPerson != null && GridUtils.CubeCoordinatesDistance(selectedTileCoordinates, clickedTileCoordinates) == 1)
+			if (selectedTile != null && selectedPerson != null && ValidNeighbourTiles(selectedTileCoordinates).Contains(clickedTileCoordinates))
             {
                 /*
                 // It's a move action
@@ -163,7 +170,7 @@ public class MapManager : MonoBehaviour {
             foreach (GameObject go in peopleMatrix)
             {
                 Destroy(go);
-            }
+			}
             peopleMatrix = PopulateMap();
         }
 	}
@@ -226,7 +233,7 @@ public class MapManager : MonoBehaviour {
 
     private void ActivateWalkableTiles(Vector3 centerTileCubeCoordinates)
     {
-        foreach (Vector3 vec in GridUtils.CubeCoordinatesNeightbours(centerTileCubeCoordinates))
+		foreach (Vector3 vec in ValidNeighbourTiles(centerTileCubeCoordinates))
         {
             GameObject go = tileMatrix.GetValue(vec);
             if (go != null)
@@ -236,6 +243,11 @@ public class MapManager : MonoBehaviour {
             }
         }
     }
+
+	private List<Vector3> ValidNeighbourTiles(Vector3 coordinates)
+	{
+		return GridUtils.CubeCoordinatesNeightbours (coordinates).Except (destroyedTiles).Where(c => tileMatrix.GetValue(c) != null).ToList();
+	}
 
     private void ResetWalkableTiles()
     {
@@ -265,6 +277,53 @@ public class MapManager : MonoBehaviour {
         }
         return coordinates;
     }
+
+	private void DestructionDaemon() {
+		InvokeRepeating	("DestroyTile", destroyStartDelay, destroyDelay);
+	}
+
+	private void DestroyTile(){
+		List<Vector3> coordinates = GetAllCubeCoordinates ()
+			.Except(destroyedTiles).ToList()
+			.ToList();
+		
+		if (coordinates.Count <= 1) {
+			print ("YOU LOST!!!!!!!");
+		}else{
+			int maxX = coordinates.Max (c =>  (int) Math.Abs(c.x));
+			int maxY = coordinates.Max (c => (int) Math.Abs(c.y));
+			int maxZ = coordinates.Max (c => (int) Math.Abs(c.z));
+
+			//Look for border tiles and tiles that have neighbours destroyed
+			List<Vector3> borderTiles = coordinates.FindAll (c => Math.Abs(c.x) == maxX || Math.Abs(c.y) == maxY || Math.Abs(c.z) == maxZ);
+			List<Vector3> destroyedNeighbours = new List<Vector3> ();
+			destroyedTiles.ForEach (n => destroyedNeighbours.AddRange (ValidNeighbourTiles (n)));
+			destroyedNeighbours = destroyedNeighbours.ToList();
+
+			//Bias towards border tiles and many destroyed neighbours
+			List <Vector3> selectableTiles = borderTiles
+				.Concat(borderTiles)
+				.Concat(borderTiles)
+				.Concat (destroyedNeighbours)
+				.Except(new List<Vector3>{rocketCoordinates}).ToList();
+			
+			int index = UnityEngine.Random.Range(0, selectableTiles.Count);
+			Vector3 coordinatesToDestroy = selectableTiles [index];
+
+			GameObject tile = tileMatrix.GetValue (coordinatesToDestroy);
+			GameObject person = peopleMatrix.GetValue (coordinatesToDestroy);
+
+			if (peopleMatrix.GetValue (coordinatesToDestroy) != null) {
+				person.SetActive(false);
+				peopleMatrix.RemoveValue (coordinatesToDestroy);
+				print ("DEAD PERSON YOU LOST!!!!!!!");
+			}
+
+			tile.GetComponent<TileState>().Destroy();
+			destroyedTiles.Add (coordinatesToDestroy);
+		
+		}
+	}
 
     private class MovingPersonData
     {

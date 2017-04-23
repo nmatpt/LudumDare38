@@ -6,9 +6,11 @@ public class TileState : MonoBehaviour {
 
 	public Sprite defaultSprite;
 	public Sprite selectedSprite;
-    public Sprite walkableSprite;
+	public Sprite destroyedSprite;
+	public Sprite walkableSprite;
 	private SpriteRenderer spriteRenderer;
-	private bool isSelected = false;
+
+	private bool isDestroyed = false;
 
 	void Awake ()
 	{
@@ -27,15 +29,24 @@ public class TileState : MonoBehaviour {
 
     public void Select()
     {
-        spriteRenderer.sprite = selectedSprite;
-        isSelected = true;
+		if (!isDestroyed) {
+			spriteRenderer.sprite = selectedSprite;
+		}
     }
 
     public void Unselect()
     {
-        spriteRenderer.sprite = defaultSprite;
-        isSelected = false;
+		if (!isDestroyed) {
+			spriteRenderer.sprite = defaultSprite;
+		}
+
     }
+
+	public void Destroy()
+	{
+		spriteRenderer.sprite = destroyedSprite;
+		isDestroyed = true;
+	}
 
     public void SetWalkable()
     {

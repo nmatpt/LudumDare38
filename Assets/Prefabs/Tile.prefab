@@ -90,6 +90,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultSprite: {fileID: 21300000, guid: 2fb6192a6b6dabf43876ff7044ff80ba, type: 3}
   selectedSprite: {fileID: 21300000, guid: d110f6e3745e72b44ad10ee0590f2c1d, type: 3}
+  destroyedSprite: {fileID: 21300000, guid: d7ec7de84e991400892aad6afba2c4ef, type: 3}
   walkableSprite: {fileID: 21300000, guid: 4f0d49a839eb43645bcb4dc5d335abcc, type: 3}
 --- !u!212 &212767309260113008
 SpriteRenderer:
