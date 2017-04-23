@@ -17,6 +17,7 @@ public class MapManager : MonoBehaviour {
     public GameObject personTemplate;
     public int numberOfPeople;
 	public int numberOfObstacles;
+	public float chanceOfRandomTiles=0.08f;
 
     public int minimumPeopleQuantity;
     public int maximumPeopleQuantity;
@@ -378,24 +379,31 @@ public class MapManager : MonoBehaviour {
 				.Except (new List<Vector3>{ rocketCoordinates }).ToList ();
 			
 			List<Vector3> destroyedNeighbours = new List<Vector3> ();
-			destroyedTiles.ForEach (n => destroyedNeighbours.AddRange (ValidNeighbourTiles (n)));
-			destroyedNeighbours = destroyedNeighbours.ToList();
+			foreach (var tile in destroyedTiles) {
+				var neighbours = ValidNeighbourTiles (tile);
+				if (neighbours.Count < 6) {
+					destroyedNeighbours.AddRange (neighbours);
+				}
+			}
 
-			//Add a small change of selecting tiles from the middle
-			var nrOfRandomTiles = (borderTiles.Count + destroyedNeighbours.Count) / 4;
-			List<Vector3> randomTiles = coordinates
-				.Except(new List<Vector3>{rocketCoordinates})
-				.OrderBy (x => UnityEngine.Random.Range(0, coordinates.Count))
-				.Take (nrOfRandomTiles).ToList();
+			destroyedNeighbours = destroyedNeighbours.ToList();
 
 			//Bias towards border tiles and many destroyed neighbours
 			List <Vector3> selectableTiles = borderTiles
 				.Concat(borderTiles)
 				.Concat(borderTiles)
-				.Concat(randomTiles)
 				.Concat (destroyedNeighbours)
 				.ToList();
-			
+
+			//Add a chance of selecting tiles from the middle
+			var nrOfRandomTiles = (int) (selectableTiles.Count * chanceOfRandomTiles);
+			List<Vector3> randomTiles = coordinates
+				.Except(selectableTiles)
+				.Except(new List<Vector3>{rocketCoordinates})
+				.OrderBy (x => UnityEngine.Random.Range(0, coordinates.Count))
+				.Take (nrOfRandomTiles).ToList();
+			selectableTiles.AddRange (randomTiles);
+
 			int index = UnityEngine.Random.Range(0, selectableTiles.Count);
 			Vector3 coordinatesToDestroy = selectableTiles [index];
 
