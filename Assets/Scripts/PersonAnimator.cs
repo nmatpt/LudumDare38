@@ -3,29 +3,27 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class PersonAnimator : MonoBehaviour {
+    
+    enum MovingStates { CanMove, Moving, StoppedMoving, IsReceiving }
 
-    enum MovingStates { CanMove, Moving, StoppedMoving }
-
-    public float timeToMove;
-    public GameObject arrow;
+    public float movementPerSecond;
+    private GameObject arrow;
 
     private float quantity = 0;     // tiny hack :p
-    private float actualQuantity = 0;
-    private MovingStates movingState;
+    private MovingStates movingState = MovingStates.CanMove;
 
 	private Animator animator;
     private TextMesh playerCountText;
-    private float timeMoving;
+
+    private GameObject destinationPerson;
 
 	// Use this for initialization
 	void Start () {
 		animator = GetComponent<Animator> ();
         playerCountText = GetComponentInChildren<TextMesh>();
 
-        SetQuantity(actualQuantity);    // tiny hack :p
+        SetQuantity(quantity);    // tiny hack :p
 
-        timeMoving = 0;
-        movingState = MovingStates.CanMove;
         for (int i=0; i < transform.childCount; i++)
         {
             if (transform.GetChild(i).name == "Arrow")
@@ -34,15 +32,33 @@ public class PersonAnimator : MonoBehaviour {
                 break;
             }
         }
-	}
+
+        if (movingState == MovingStates.IsReceiving) // hack
+        {
+            animator.SetBool("personHappy", true);
+        }
+
+    }
 
 	// Update is called once per frame
 	void Update () {
-		if (movingState == MovingStates.Moving)
-        {
-            timeMoving += Time.deltaTime;
-            if (timeMoving > timeToMove)
+        if (movingState == MovingStates.Moving) {
+            if (destinationPerson != null && destinationPerson.activeSelf == true)
             {
+                float quantityInTick = movementPerSecond * Time.deltaTime;
+                quantityInTick = Mathf.Min(quantityInTick, quantity);
+
+                destinationPerson.GetComponent<PersonAnimator>().AddQuantity(quantityInTick);
+                AddQuantity(-quantityInTick);
+
+                if (quantity <= 0)
+                {
+                    StopMoving();
+                }
+            }
+            else // something happened to the destination person :'(
+            {
+                print("DESTINATION PERSON DEAD. OR WORSE");
                 StopMoving();
             }
         }
@@ -63,34 +79,53 @@ public class PersonAnimator : MonoBehaviour {
 
     public void SetQuantity(float quantity)
     {
-        actualQuantity = this.quantity = quantity;
+        this.quantity = quantity;
         if (playerCountText != null)
         {
             // to account fo when this method is called before Start()
-            playerCountText.text = actualQuantity.ToString();
+            playerCountText.text = Mathf.Round(quantity).ToString();
         }
     }
 
-    public void StartMoving(Vector3 direction)
+    public float GetQuantity()
+    {
+        return quantity;
+    }
+
+    public void AddQuantity(float quantity)
+    {
+        SetQuantity(this.quantity + quantity);
+    }
+
+    public void StartMoving(Vector3 direction, GameObject destinationPerson)
     {
         movingState = MovingStates.Moving;
         arrow.SetActive(true);
-        print(direction);
-        arrow.transform.Rotate(Vector3.forward * angleBetweenVectors(Vector3.right, direction));
+        arrow.transform.Rotate(Vector3.forward * AngleBetweenVectors(Vector3.right, direction));
+        this.destinationPerson = destinationPerson;
     }
 
     public void StopMoving()
     {
         movingState = MovingStates.StoppedMoving;
-        timeMoving = 0;
         arrow.SetActive(false);
         arrow.transform.rotation = Quaternion.identity;
         animator.SetBool("personHappy", false);
     }
 
+    public void SetReceivingPeople()
+    {
+        movingState = MovingStates.IsReceiving;
+        if (animator != null)
+        {
+            animator.SetBool("personHappy", true);
+        }
+    }
+
     public void ReadyToMove()
     {
         movingState = MovingStates.CanMove;
+        animator.SetBool("personHappy", true);
     }
 
     public bool CanMove()
@@ -103,7 +138,7 @@ public class PersonAnimator : MonoBehaviour {
         return movingState == MovingStates.StoppedMoving;
     }
 
-    private float angleBetweenVectors(Vector2 vec1, Vector2 vec2)
+    private float AngleBetweenVectors(Vector2 vec1, Vector2 vec2)
     {
         Vector2 diference = vec2 - vec1;
         float sign = (vec2.y < vec1.y) ? -1.0f : 1.0f;

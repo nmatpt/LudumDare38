@@ -10,6 +10,7 @@ public class MapManager : MonoBehaviour {
     public Camera gameCamera;
 
     public int mapRadius;
+    public int mapHeightThreshold;
 
     public GameObject hexTemplate;
     public float hexRadius;
@@ -68,11 +69,16 @@ public class MapManager : MonoBehaviour {
 
 			if (selectedTile != null && selectedPerson != null && ValidNeighbourTiles(selectedTileCoordinates).Contains(clickedTileCoordinates))
             {
+                // move person
 				Vector2 movingDirection = GridUtils.CubeToPointyTopSceneCoordinates(clickedTileCoordinates, hexRadius) - GridUtils.CubeToPointyTopSceneCoordinates(selectedTileCoordinates, hexRadius);
-                print(GridUtils.CubeToPointyTopSceneCoordinates(clickedTileCoordinates, hexRadius) + " " + GridUtils.CubeToPointyTopSceneCoordinates(selectedTileCoordinates, hexRadius));
 
-                selectedPerson.GetComponent<PersonAnimator>().StartMoving(movingDirection);
-                movingPeople.Add(new MovingPersonData(selectedPerson, selectedTileCoordinates, clickedTileCoordinates));
+                GameObject destinationPerson = Instantiate(personTemplate, GridUtils.CubeToPointyTopSceneCoordinates(clickedTileCoordinates, hexRadius), Quaternion.identity);
+                destinationPerson.GetComponent<PersonAnimator>().SetQuantity(0);
+                destinationPerson.GetComponent<PersonAnimator>().SetReceivingPeople();
+                peopleMatrix.AddValue(clickedTileCoordinates, destinationPerson);
+
+                selectedPerson.GetComponent<PersonAnimator>().StartMoving(movingDirection, destinationPerson);
+                movingPeople.Add(new MovingPersonData(selectedPerson, destinationPerson, selectedTileCoordinates, clickedTileCoordinates));
 
                 selectedTile.GetComponent<TileState>().Unselect();
                 selectedTile = null;
@@ -116,19 +122,28 @@ public class MapManager : MonoBehaviour {
             }
         }
 
-        List<MovingPersonData> finishedMoving = movingPeople.Where(x => x.Person.GetComponent<PersonAnimator>().HasStoppedMoving()).ToList();
+        List<MovingPersonData> finishedMoving = movingPeople.Where(x => x.OriginPerson.GetComponent<PersonAnimator>().HasStoppedMoving()).ToList();
 
         foreach (MovingPersonData data in finishedMoving)
         {
-            if (data.Person.GetComponent<PersonAnimator>().HasStoppedMoving())
+            if (data.OriginPerson.GetComponent<PersonAnimator>().HasStoppedMoving())
             {
-                data.Person.transform.position = GridUtils.CubeToPointyTopSceneCoordinates(data.Destination, hexRadius);
+                movingPeople.Remove(data);
+                if (data.OriginPerson.GetComponent<PersonAnimator>().GetQuantity() != 0)
+                {
+                    // something happened to destination, and movement was interrupted
+                    data.OriginPerson.GetComponent<PersonAnimator>().ReadyToMove();
+                    continue;
+                }
+
+                //data.OriginPerson.transform.position = GridUtils.CubeToPointyTopSceneCoordinates(data.Destination, hexRadius);
                 peopleMatrix.RemoveValue(data.Origin);
+                
 
                 // It's moving inside the rocket
                 if (rocketCoordinates == data.Destination)
                 {
-                    data.Person.SetActive(false);
+                    data.OriginPerson.SetActive(false);
                     nrPersonsIn += 1;
                     if (nrPersonsIn >= numberOfPeople)
                     {
@@ -137,13 +152,14 @@ public class MapManager : MonoBehaviour {
                 }
                 else
                 {
-                    peopleMatrix.AddValue(data.Destination, data.Person);
+                    peopleMatrix.AddValue(data.Destination, data.DestinationPerson);
                 }
-                data.Person.GetComponent<PersonAnimator>().ReadyToMove();
-                movingPeople.Remove(data);
+                //data.OriginPerson.GetComponent<PersonAnimator>().ReadyToMove();
+
+                data.DestinationPerson.GetComponent<PersonAnimator>().ReadyToMove();
+                data.OriginPerson.SetActive(false);
             }
         }
-
 
         if (Input.GetKeyDown(KeyCode.Space))
         {
@@ -225,7 +241,7 @@ public class MapManager : MonoBehaviour {
             coordinates.RemoveAt(index);
             Vector2 screen = GridUtils.CubeToPointyTopSceneCoordinates(cube, hexRadius);
             GameObject person = Instantiate(personTemplate, new Vector3(screen.x, screen.y, 0), Quaternion.identity);
-            person.GetComponent<PersonAnimator>().SetQuantity(1000);
+            person.GetComponent<PersonAnimator>().SetQuantity(50);
             peopleMatrix.AddValue((int)cube.x, (int)cube.y, (int)cube.z, person);
         }
 
@@ -266,11 +282,12 @@ public class MapManager : MonoBehaviour {
     private List<Vector3> GetAllCubeCoordinates()
     {
         List<Vector3> coordinates = new List<Vector3>();
+        int maxHeight = Mathf.Min(mapRadius, mapHeightThreshold);
         for (int i = -mapRadius; i <= mapRadius; i++)
         {
             for (int j = -mapRadius; j <= mapRadius; j++)
             {
-                for (int k = -mapRadius; k <= mapRadius; k++)
+                for (int k = -maxHeight; k <= maxHeight; k++)
                 {
                     if (i + j + k != 0)
                     {
@@ -332,13 +349,15 @@ public class MapManager : MonoBehaviour {
 
     private class MovingPersonData
     {
-        public GameObject Person { get; set; }
+        public GameObject OriginPerson { get; set; }
+        public GameObject DestinationPerson { get; set; }
         public Vector3 Origin { get; set; }
         public Vector3 Destination { get; set; }
 
-        public MovingPersonData(GameObject person, Vector3 origin, Vector3 destination)
+        public MovingPersonData(GameObject originPerson, GameObject destinationPerson, Vector3 origin, Vector3 destination)
         {
-            Person = person;
+            OriginPerson = originPerson;
+            DestinationPerson = destinationPerson;
             Origin = origin;
             Destination = destination;
         }
