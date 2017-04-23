@@ -60,6 +60,15 @@ public class MapManager : MonoBehaviour {
 	// Update is called once per frame
 	void Update () {
 		
+        // FOR DEBUG ONLY
+        if (Input.GetMouseButtonDown(1))
+        {
+            Vector2 mousePosition = gameCamera.ScreenToWorldPoint(Input.mousePosition);
+            Vector3 clickedTileCoordinates = GridUtils.PointyTopSceneToCubeCoordinates(mousePosition, hexRadius);
+
+            DestroyTileAt(clickedTileCoordinates);
+        }
+
         if (Input.GetMouseButtonDown(0))
         {
             Vector2 mousePosition = gameCamera.ScreenToWorldPoint(Input.mousePosition);
@@ -306,10 +315,10 @@ public class MapManager : MonoBehaviour {
     }
 
 	private void DestructionDaemon() {
-		InvokeRepeating	("DestroyTile", destroyStartDelay, destroyDelay);
+		InvokeRepeating	("RandomlyDestroyTile", destroyStartDelay, destroyDelay);
 	}
 
-	private void DestroyTile(){
+	private void RandomlyDestroyTile(){
 		List<Vector3> coordinates = GetAllCubeCoordinates ()
 			.Except(destroyedTiles).ToList()
 			.ToList();
@@ -337,20 +346,25 @@ public class MapManager : MonoBehaviour {
 			int index = UnityEngine.Random.Range(0, selectableTiles.Count);
 			Vector3 coordinatesToDestroy = selectableTiles [index];
 
-			GameObject tile = tileMatrix.GetValue (coordinatesToDestroy);
-			GameObject person = peopleMatrix.GetValue (coordinatesToDestroy);
-
-			if (peopleMatrix.GetValue (coordinatesToDestroy) != null) {
-				person.SetActive(false);
-				peopleMatrix.RemoveValue (coordinatesToDestroy);
-				print ("DEAD PERSON YOU LOST!!!!!!!");
-			}
-
-			tile.GetComponent<TileState>().Destroy();
-			destroyedTiles.Add (coordinatesToDestroy);
-		
+            DestroyTileAt(coordinatesToDestroy);
 		}
 	}
+
+    private void DestroyTileAt(Vector3 cubeCoordinates)
+    {
+        GameObject tile = tileMatrix.GetValue(cubeCoordinates);
+        GameObject person = peopleMatrix.GetValue(cubeCoordinates);
+
+        if (peopleMatrix.GetValue(cubeCoordinates) != null)
+        {
+            person.SetActive(false);
+            peopleMatrix.RemoveValue(cubeCoordinates);
+            print("DEAD PERSON YOU LOST!!!!!!!");
+        }
+
+        tile.GetComponent<TileState>().Destroy();
+        destroyedTiles.Add(cubeCoordinates);
+    }
 
     private class MovingPersonData
     {

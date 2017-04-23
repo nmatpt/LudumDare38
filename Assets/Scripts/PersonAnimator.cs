@@ -64,6 +64,14 @@ public class PersonAnimator : MonoBehaviour {
         }
 	}
 
+    private void OnDisable()
+    {
+        if(destinationPerson != null && destinationPerson.activeSelf == true)
+        {
+            destinationPerson.GetComponent<PersonAnimator>().ReadyToMove();
+        }
+    }
+
     public void Select()
     {
         animator.SetBool("personHappy", true);
@@ -125,7 +133,7 @@ public class PersonAnimator : MonoBehaviour {
     public void ReadyToMove()
     {
         movingState = MovingStates.CanMove;
-        animator.SetBool("personHappy", true);
+        //animator.SetBool("personHappy", true);
     }
 
     public bool CanMove()

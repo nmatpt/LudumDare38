@@ -113,12 +113,6 @@ RectTransform:
   m_PrefabParentObject: {fileID: 224698706844510858, guid: 2dc5e6966de3e4e0890ab83fb7bf0181,
     type: 2}
   m_PrefabInternal: {fileID: 100723962}
---- !u!114 &97469102 stripped
-MonoBehaviour:
-  m_PrefabParentObject: {fileID: 114441042812141114, guid: 2dc5e6966de3e4e0890ab83fb7bf0181,
-    type: 2}
-  m_PrefabInternal: {fileID: 100723962}
-  m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
 --- !u!1001 &100723962
 Prefab:
   m_ObjectHideFlags: 0
@@ -405,11 +399,10 @@ MonoBehaviour:
   hexRadius: 0.5
   personTemplate: {fileID: 1306392188717020, guid: 5a7519d9beb934738a97ff58c3ad07b9,
     type: 2}
-  numberOfPeople: 1
+  numberOfPeople: 5
   numberOfObstacles: 0
   rocketTemplate: {fileID: 1635883812145392, guid: c89b8460efa844f55933a9483cd5124b,
     type: 2}
-  winText: {fileID: 97469102}
   destroyStartDelay: 1
   destroyDelay: 1
 --- !u!4 &865658955
