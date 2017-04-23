@@ -329,8 +329,10 @@ MonoBehaviour:
   numberOfObstacles: 10
   rocketTemplate: {fileID: 1635883812145392, guid: c89b8460efa844f55933a9483cd5124b,
     type: 2}
-  destroyStartDelay: 3
-  destroyDelay: 2
+  meteorTemplate: {fileID: 1250573180892082, guid: cfa416a2ab1d24f459b71227030ee388,
+    type: 2}
+  destroyStartDelay: 1
+  destroyDelay: 3
 --- !u!4 &1961367467
 Transform:
   m_ObjectHideFlags: 0
