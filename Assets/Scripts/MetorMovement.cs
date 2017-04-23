@@ -4,6 +4,9 @@ using UnityEngine;
 
 public class MetorMovement : MonoBehaviour {
 	private Rigidbody2D rb2d;
+	private float distanceToTarget = float.MaxValue;
+
+	public float speed = 3.0f;
 
 	// Use this for initialization
 	void Start () {
@@ -15,6 +18,6 @@ public class MetorMovement : MonoBehaviour {
 	}
 
 	public void MoveTo(Vector2 location){
-		GetComponent<Rigidbody2D> ().AddForce (location);
+		GetComponent<Rigidbody2D>().AddForce (location.normalized * speed);
 	}
 }

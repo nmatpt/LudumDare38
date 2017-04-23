@@ -32,6 +32,7 @@ public class MapManager : MonoBehaviour {
     private Vector3 selectedTileCoordinates;
     private HashSet<GameObject> walkableTiles;
     private HashSet<MovingPersonData> movingPeople;
+	private List<MeteorData> fallingMeteors;
 	private List<Vector3> destroyedTiles;
 	private List<Vector3> obstacles;
 
@@ -46,6 +47,7 @@ public class MapManager : MonoBehaviour {
 		movingPeople = new HashSet<MovingPersonData>();
 		destroyedTiles = new List<Vector3> ();
 		obstacles = new List<Vector3> ();
+		fallingMeteors = new List<MeteorData> ();
 
 		rocketCoordinates = PlaceRocket ();
 		tileMatrix = GenerateMap();
@@ -57,7 +59,7 @@ public class MapManager : MonoBehaviour {
 
 		DestructionDaemon ();
     }
-	
+
 	// Update is called once per frame
 	void Update () {
 		
@@ -184,6 +186,34 @@ public class MapManager : MonoBehaviour {
         }
 	}
 
+
+	void FixedUpdate () {
+		List<MeteorData> toDestroy = new List<MeteorData> ();
+
+		foreach(var item in fallingMeteors)
+		{
+			var meteor = item.Meteor;
+			var tileHexCoordinates = item.TileCoordinate;
+				
+			Vector2 meteorPosition = gameCamera.WorldToScreenPoint (meteor.GetComponent < MetorMovement> ().transform.position);
+			Vector2 tilePosition = gameCamera.WorldToScreenPoint(GridUtils.CubeToPointyTopSceneCoordinates(tileHexCoordinates, hexRadius));
+			float distance = Vector2.Distance (meteorPosition, tilePosition);
+
+			if (distance > item.Distance) {
+				toDestroy.Add (item);
+			}
+			item.Distance = distance;
+		}
+
+		foreach (var item in toDestroy) {
+			var tileHexCoordinates = item.TileCoordinate;
+			print("Destroying tile " + tileHexCoordinates);
+			item.Meteor.SetActive (false);
+			DestroyTileAt(tileHexCoordinates);		
+			fallingMeteors.Remove (item);
+		}
+	}
+
     private GameObjectCubeMatrix GenerateMap()
     {
         GameObjectCubeMatrix tileMatrix = new GameObjectCubeMatrix();
@@ -306,32 +336,28 @@ public class MapManager : MonoBehaviour {
     }
 
 	private void DestructionDaemon() {
-		InvokeRepeating	("RandomlyDestroyTile", destroyStartDelay, destroyDelay);
-		InvokeRepeating	("LaunchMeteor", destroyStartDelay, 8.0f);
+		InvokeRepeating	("RandomlySelectTile", destroyStartDelay, destroyDelay);
 	}
 
 	private void LaunchMeteor(Vector3 tileCoordinate){
-		print ("new meteor");
 		Vector2 screenBounds = gameCamera.ScreenToWorldPoint(new Vector2(Screen.width, Screen.height));
 		Vector3 meteorStartPosition =  new Vector3(0,screenBounds.y + 1, -5);
 
 		Vector2 meteorStartScreenCoordinate =  new Vector2(meteorStartPosition.x, meteorStartPosition.y);
 		Vector2 tileScreenCoordinate = GridUtils.CubeToPointyTopSceneCoordinates (tileCoordinate, hexRadius);
 
-		Vector2 direction = (tileScreenCoordinate - meteorStartScreenCoordinate).normalized;
-		print ("meteorStartPosition:" + meteorStartScreenCoordinate);
-		print ("tileCoordinate:" + tileScreenCoordinate);
-		print ("direction:" + direction);
-
-		float speed = 40.0f;
+		Vector2 direction = (tileScreenCoordinate - meteorStartScreenCoordinate);
 
 		GameObject meteor = Instantiate(meteorTemplate, meteorStartPosition, Quaternion.identity);
-		meteor.GetComponent < MetorMovement> ().MoveTo (direction * speed);
+		meteor.GetComponent < MetorMovement> ().MoveTo (direction);
+		fallingMeteors.Add (new MeteorData(meteor, tileCoordinate, tileScreenCoordinate, float.MaxValue));
 	}
 
-	private void RandomlyDestroyTile(){
+	private void RandomlySelectTile(){
+		var fallingMeteorTiles = fallingMeteors.Select (x => x.TileCoordinate);
 		List<Vector3> coordinates = GetAllCubeCoordinates ()
 			.Except(destroyedTiles).ToList()
+			.Except(fallingMeteorTiles).ToList()
 			.ToList();
 		
 		if (coordinates.Count <= 1) {
@@ -358,7 +384,6 @@ public class MapManager : MonoBehaviour {
 			Vector3 coordinatesToDestroy = selectableTiles [index];
 
 			LaunchMeteor (coordinatesToDestroy);
-			DestroyTileAt(coordinatesToDestroy);
 		}
 	}
 
@@ -393,4 +418,23 @@ public class MapManager : MonoBehaviour {
             Destination = destination;
         }
     }
+
+
+
+	private class MeteorData
+	{
+		public GameObject Meteor { get; set; }
+		public Vector3 TileCoordinate { get; set; }
+		public Vector2 TileScreenCoordinate { get; set; }
+		public float Distance { get; set; }
+
+
+				public MeteorData(GameObject meteor, Vector3 tileCoordinate, Vector2 tileScreenCoordinate, float distance)
+		{
+			TileScreenCoordinate = tileScreenCoordinate;
+			Meteor = meteor;
+			TileCoordinate = tileCoordinate;
+			Distance = distance;
+		}
+	}
 }
