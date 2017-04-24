@@ -5,6 +5,18 @@ EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Scenes:
+  - enabled: 0
+    path: Assets/Scenes/Vasco Scene.unity
+    guid: c0faad5d410d5cf43a197a4cbcf57043
   - enabled: 1
     path: Assets/Scenes/Title Scene.unity
     guid: bcc61ad0e10692f45af08406274c4200
+  - enabled: 1
+    path: Assets/Scenes/Main Scene.unity
+    guid: 681892244b6944349903f099cb8b9cf0
+  - enabled: 1
+    path: Assets/Scenes/Story Scene.unity
+    guid: 62872642dec67a043a3680ae056cb09f
+  - enabled: 1
+    path: Assets/Scenes/HowTo Scene.unity
+    guid: fbfbfab4b27b5c14da68040bd3e8e78c

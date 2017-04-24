@@ -8,22 +8,27 @@ public class MapManager : MonoBehaviour {
 
     public Camera gameCamera;
 
+    public GameObject hexTemplate;
+    public GameObject personTemplate;
+	public GameObject rocketTemplate;
+	public GameObject meteorTemplate;
+    public GameObject SceneCanvas;
+
     public int mapRadius;
     public int mapHeightThreshold;
-
-    public GameObject hexTemplate;
     public float hexRadius;
-
-    public GameObject personTemplate;
-    public int numberOfPeople;
-	public int numberOfObstacles;
-	public float chanceOfRandomTiles=0.08f;
 
     public int minimumPeopleQuantity;
     public int maximumPeopleQuantity;
 
-	public GameObject rocketTemplate;
-	public GameObject meteorTemplate;
+    public int numberOfPeople;
+	public int numberOfObstacles;
+
+    public float personMovementPerSecond;
+    public float rocketProgreesPerPerson;
+
+	public float chanceOfRandomTiles=0.08f;
+
 	private GameObject rocket;
 	private Vector3 rocketCoordinates;
 
@@ -66,13 +71,13 @@ public class MapManager : MonoBehaviour {
 	void Update () {
 		
         // FOR DEBUG ONLY
-        if (Input.GetMouseButtonDown(1))
-        {
-            Vector2 mousePosition = gameCamera.ScreenToWorldPoint(Input.mousePosition);
-            Vector3 clickedTileCoordinates = GridUtils.PointyTopSceneToCubeCoordinates(mousePosition, hexRadius);
+        //if (Input.GetMouseButtonDown(1))
+        //{
+        //    Vector2 mousePosition = gameCamera.ScreenToWorldPoint(Input.mousePosition);
+        //    Vector3 clickedTileCoordinates = GridUtils.PointyTopSceneToCubeCoordinates(mousePosition, hexRadius);
 
-            DestroyTileAt(clickedTileCoordinates);
-        }
+        //    DestroyTileAt(clickedTileCoordinates);
+        //}
 
         if (Input.GetMouseButtonDown(0))
         {
@@ -96,7 +101,7 @@ public class MapManager : MonoBehaviour {
                     }
                     else
                     {
-                        destinationPerson = Instantiate(personTemplate, GridUtils.CubeToPointyTopSceneCoordinates(clickedTileCoordinates, hexRadius), Quaternion.identity);
+                        destinationPerson = InstantiatePersonAt(GridUtils.CubeToPointyTopSceneCoordinates(clickedTileCoordinates, hexRadius));
                         destinationPerson.GetComponent<PersonAnimator>().SetQuantity(0);
                         destinationPerson.GetComponent<PersonAnimator>().SetReceivingPeople();
                         peopleMatrix.AddValue(clickedTileCoordinates, destinationPerson);
@@ -174,23 +179,15 @@ public class MapManager : MonoBehaviour {
             }
         }
 
-        if (Input.GetKeyDown(KeyCode.Return))
+        if (Input.GetKeyDown(KeyCode.Space) && rocket.GetComponent<RocketManager>().IsReadyToLaunch())
         {
-            selectedTile = null;
-            foreach (GameObject go in tileMatrix)
-            {
-                Destroy(go);
-            }
-            tileMatrix = GenerateMap();
-
-            selectedPerson = null;
-            foreach (GameObject go in peopleMatrix)
-            {
-                Destroy(go);
-			}
-            peopleMatrix = PopulateMap();
+            RocketManager rocketManager = rocket.GetComponent<RocketManager>();
+            rocketManager.Launch();
+            //SceneCanvas.GetComponent<EndGameGUIHandler>().WonTheGame((int)rocketManager.GetPeopleInside());
+            StartCoroutine(StartWinningGUICoroutine((int)rocketManager.GetPeopleInside()));
         }
-	}
+
+    }
 
 
 	void FixedUpdate () {
@@ -218,6 +215,13 @@ public class MapManager : MonoBehaviour {
 			fallingMeteors.Remove (item);
 		}
 	}
+
+    private GameObject InstantiatePersonAt(Vector3 worldCoordinates)
+    {
+        GameObject person = Instantiate(personTemplate, worldCoordinates, Quaternion.identity);
+        person.GetComponent<PersonAnimator>().movementPerSecond = personMovementPerSecond;
+        return person;
+    }
 
     private GameObjectCubeMatrix GenerateMap()
     {
@@ -250,6 +254,7 @@ public class MapManager : MonoBehaviour {
 	{
         Vector3 rocketScenePosition = new Vector3(0, 0, -1);
 		rocket = Instantiate(rocketTemplate, rocketScenePosition, Quaternion.identity);
+        rocket.GetComponent<RocketManager>().progressPerPersonPerSecond = rocketProgreesPerPerson;
 
         return GridUtils.PointyTopSceneToCubeCoordinates(rocketScenePosition, hexRadius);
 	}
@@ -280,7 +285,7 @@ public class MapManager : MonoBehaviour {
             Vector3 cube = coordinates[index];
             coordinates.RemoveAt(index);
             Vector2 screen = GridUtils.CubeToPointyTopSceneCoordinates(cube, hexRadius);
-            GameObject person = Instantiate(personTemplate, new Vector3(screen.x, screen.y, 0), Quaternion.identity);
+            GameObject person = InstantiatePersonAt(new Vector3(screen.x, screen.y, 0));
             person.GetComponent<PersonAnimator>().SetQuantity(UnityEngine.Random.Range(minimumPeopleQuantity, maximumPeopleQuantity));
             peopleMatrix.AddValue((int)cube.x, (int)cube.y, (int)cube.z, person);
         }
@@ -366,7 +371,7 @@ public class MapManager : MonoBehaviour {
 			.ToList();
 		
 		if (coordinates.Count <= 0) {
-			print ("YOU LOST!!!!!!!");
+			//print ("YOU LOST!!!!!!!");
 		}else{
 			int maxX = coordinates.Max (c =>  (int) Math.Abs(c.x));
 			int maxY = coordinates.Max (c => (int) Math.Abs(c.y));
@@ -419,15 +424,20 @@ public class MapManager : MonoBehaviour {
         {
             person.SetActive(false);
             peopleMatrix.RemoveValue(cubeCoordinates);
-            print("DEAD PERSON!!!!!!!");
         }
 		if(cubeCoordinates == rocketCoordinates)
 		{
 			rocket.SetActive (false);
-			print("YOU LOST THE GAME!!!!!!!");			
+            SceneCanvas.GetComponent<EndGameGUIHandler>().LostTheGame();
 		}
         tile.GetComponent<TileState>().Destroy();
         destroyedTiles.Add(cubeCoordinates);
+    }
+
+    private IEnumerator StartWinningGUICoroutine(int peopleSaved)
+    {
+        yield return new WaitForSeconds(3);
+        SceneCanvas.GetComponent<EndGameGUIHandler>().WonTheGame(peopleSaved);
     }
 
     private class MovingPersonData
@@ -445,7 +455,6 @@ public class MapManager : MonoBehaviour {
             Destination = destination;
         }
     }
-
 
 
 	private class MeteorData

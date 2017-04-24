@@ -70,7 +70,17 @@ public class RocketManager : MonoBehaviour {
         }
 	}
 
-	private void BuildDaemon() {
+    public bool IsReadyToLaunch()
+    {
+        return !launched && buildProgress >= 100;
+    }
+
+    public float GetPeopleInside()
+    {
+        return nrPeopleIn;
+    }
+
+    private void BuildDaemon() {
 		InvokeRepeating	("BuildRocket", 1.0f, 1.0f);
 	}
 

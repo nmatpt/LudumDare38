@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class TitleHandler : MonoBehaviour {
@@ -23,12 +24,12 @@ public class TitleHandler : MonoBehaviour {
 
     public void OnPlayPressed()
     {
-        print("Pressed Play");
+        SceneManager.LoadScene("Main Scene");
     }
 
     public void OnHowToPlayPressed()
     {
-        print("Pressed How To Play");
+        SceneManager.LoadScene("Story Scene");
     }
 
     public void OnQuitPressed()
