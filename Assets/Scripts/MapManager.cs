@@ -351,7 +351,8 @@ public class MapManager : MonoBehaviour {
 
 	private void LaunchMeteor(Vector3 tileCoordinate){
 		Vector2 screenBounds = gameCamera.ScreenToWorldPoint(new Vector2(Screen.width, Screen.height));
-		Vector3 meteorStartPosition =  new Vector3(0,screenBounds.y + 1, -5);
+
+		Vector3 meteorStartPosition =  new Vector3(UnityEngine.Random.Range(-screenBounds.x, screenBounds.x),screenBounds.y + 1, -5);
 
 		Vector2 meteorStartScreenCoordinate =  new Vector2(meteorStartPosition.x, meteorStartPosition.y);
 		Vector2 tileScreenCoordinate = GridUtils.CubeToPointyTopSceneCoordinates (tileCoordinate, hexRadius);
