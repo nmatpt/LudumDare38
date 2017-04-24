@@ -173,6 +173,12 @@ public class MapManager : MonoBehaviour {
 
                 if (data.DestinationPerson.tag != "Rocket")
                 {
+                    // Last minute hack, horrible hack
+                    if (data.DestinationPerson.GetComponent<PersonAnimator>().IsReceiving())
+                    {
+                        data.DestinationPerson.GetComponent<Animator>().SetBool("personHappy", false);
+                    }
+
                     data.DestinationPerson.GetComponent<PersonAnimator>().ReadyToMove();
                 }
                 data.OriginPerson.SetActive(false);

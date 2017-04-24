@@ -159,6 +159,11 @@ public class PersonAnimator : MonoBehaviour {
         return movingState == MovingStates.StoppedMoving;
     }
 
+    public bool IsReceiving()
+    {
+        return movingState == MovingStates.IsReceiving;
+    }
+
     private float AngleBetweenVectors(Vector2 vec1, Vector2 vec2)
     {
         float sign = (vec2.y < vec1.y) ? -1.0f : 1.0f;
